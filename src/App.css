@@ -1,4 +1,4 @@
-.App {
+/* .App {
   text-align: center;
 }
 
@@ -35,4 +35,33 @@
   to {
     transform: rotate(360deg);
   }
+} */
+
+#ordering-panel {
+    width: 240px;
+    text-align: center;
+
+    background: yellow;
+}
+
+#song-graph {
+    flex-grow: 1;
+}
+
+#spotify-playing {
+    padding: 18px;
+    font-size: 24pt;
+
+    background: gray;
+    color: white;
+}
+
+/* Get it to fill the height */
+
+body {
+    height: 100vh;
+}
+
+#root {
+    height: 100%;
 }
