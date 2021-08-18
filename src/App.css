@@ -33,6 +33,9 @@ body {
 /* Song node */
 
 .song-node {
+    width: 195px;
+    height: 65px;
+
     background: white;
     overflow: hidden;
 
