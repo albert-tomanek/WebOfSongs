@@ -12,6 +12,7 @@ interface NodePanelProps {
     node_id: string;
     cb_reorder: (ids: string[]) => void;
     cb_delete_link: (id_from: string, id_to: string) => void;
+    cb_play_node?: (id: string) => void;
 }
 
 interface NodePanelState {
@@ -29,7 +30,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 
     componentDidMount() {
         this.setState({
-            list: get_node_links(this.props.data, this.props.node_id).sort((a, b) => a.index - b.index).map(link => get_node(this.props.data, link.target))
+            list: get_node_links(this.props.data, this.props.node_id).sort((a, b) => a.index - b.index).map(link => get_node(this.props.data, link.target)!)
         });
     }
 
@@ -47,7 +48,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 	render() {
 		return (
 			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", height: "100%"}}>
-				<h1 style={{display: "flex", justifyContent: "left"}}>{get_node(this.props.data, this.props.node_id).title}</h1>
+				<h1 style={{display: "flex", justifyContent: "left"}}>{get_node(this.props.data, this.props.node_id)!.title}</h1>
                 <DraggableList<WOSGraphNode, any, ListTemplate>
                     list={this.state.list}
                     itemKey="id"
@@ -58,6 +59,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
                     commonProps={{
                         list: this.state.list,  // so that each instance can find out what its index in the list is
                         delete_link_with: (id: string) => this.props.cb_delete_link(this.props.node_id, id),  // to call when the delete button is pressed.
+                        cb_play_node: this.props.cb_play_node,
                     }}
                 />
                 <div className="song-node" style={{borderStyle: "dashed"}}></div>
@@ -80,6 +82,7 @@ class ListTemplate extends React.Component<any, any> {
                     key={this.props.itemKey}
                     dragHandleProps={this.props.dragHandleProps}
                     shadow={this.props.itemSelected}
+                    cb_play_node={this.props.commonProps.cb_play_node}
                 />
                 <img className="bin" src={Bin} width="24px" height="24px"
                     onClick={() => this.props.commonProps.delete_link_with(this.props.item.id)}

@@ -24,13 +24,42 @@ export type WOSGraphData = D3GraphData<WOSGraphNode, WOSGraphLink>;
 /* Component */
 
 interface WOSGraphProps extends D3GraphProps<WOSGraphNode, D3GraphLink> {
-    cb_node_selected?: (id: string|null) => void,
+    cb_focus_node?: (id: string|null) => void,
+    cb_play_node?:  (id: string) => void;
 }
 
-export class WOSGraph extends React.Component<WOSGraphProps, {}> {
+export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
+    constructor(props: WOSGraphProps) {
+        super(props);
+
+        this.state = {config: {
+            directed: true,
+            staticGraphWithDragAndDrop: true,
+            nodeHighlightBehavior: true,
+            node: {
+                color: "lightgreen",
+                size: {width: 1950, height: 690},   // pixels x10 for some reason...  https://danielcaldas.github.io/react-d3-graph/docs/#node-size
+                highlightStrokeColor: "blue",
+                renderLabel: false,
+                viewGenerator: (node: WOSGraphNode) => {
+                    return React.createElement(WOSNode,{
+                        node: node,
+                        cb_focus_node: this.props.cb_focus_node,
+                        cb_play_node:  this.props.cb_play_node,
+                    }, null)
+                },
+            },
+            link: {
+                color: "black",
+                highlightColor: "lightblue",
+                strokeWidth: 4,
+            },
+        }};
+    }
+
     on_click_node(id: string) {
-        if (this.props.cb_node_selected) {
-            this.props.cb_node_selected(id);
+        if (this.props.cb_focus_node) {
+            this.props.cb_focus_node(id);
         }
     }
 
@@ -43,29 +72,10 @@ export class WOSGraph extends React.Component<WOSGraphProps, {}> {
             <D3Graph
                 id="graph-id"
                 data={this.props.data}
-                config={WOSGraph.CONFIG}
-                onClickNode={this.on_click_node.bind(this)}
+                config={this.state.config}
                 onClickLink={this.on_click_link.bind(this)}
-                onClickGraph={() => this.props.cb_node_selected ? this.props.cb_node_selected(null) : null}
+                onClickGraph={() => this.props.cb_focus_node ? this.props.cb_focus_node(null) : null}
             />
         );
     }
-
-    static CONFIG = {
-        directed: true,
-        staticGraphWithDragAndDrop: true,
-        nodeHighlightBehavior: true,
-        node: {
-            color: "lightgreen",
-            size: {width: 1950, height: 690},   // pixels x10 for some reason...  https://danielcaldas.github.io/react-d3-graph/docs/#node-size
-            highlightStrokeColor: "blue",
-            renderLabel: false,
-            viewGenerator: (node: WOSGraphNode) => React.createElement(WOSNode, {node: node}, null),
-        },
-        link: {
-            color: "black",
-            highlightColor: "lightblue",
-            strokeWidth: 4,
-        },
-    };
 }

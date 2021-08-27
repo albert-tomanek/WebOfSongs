@@ -37,6 +37,7 @@ interface AppProps {
 
 interface AppState {
     selected_id: string | null;
+    playing_id: string | null;
     data: WOSGraphData;
 }
 
@@ -46,6 +47,7 @@ class App extends React.Component<AppProps, AppState> {
 
 		this.state = {
             selected_id: null,
+            playing_id: null,
             data: TEST_DATA,
 		};
 	}
@@ -72,18 +74,49 @@ class App extends React.Component<AppProps, AppState> {
                                 node_id={this.state.selected_id}
                                 cb_reorder={this.on_links_reorder.bind(this)}
                                 cb_delete_link={this.on_delete_link.bind(this)}
+                                cb_play_node={this.on_play_node.bind(this)}
                             />
                         }
                     </div>
                     <WOSGraph id="song-graph"
                         data={this.state.data}
-                        cb_node_selected={(id: string|null) => {this.setState((state, props) => ({selected_id: id}))}}      // https://medium.com/ableneo/react-setstate-does-not-immediately-update-the-state-84dbd26f67d5
+                        cb_focus_node={(id: string|null) => {this.setState((state, props) => ({selected_id: id}))}}      // https://medium.com/ableneo/react-setstate-does-not-immediately-update-the-state-84dbd26f67d5
+                        cb_play_node={this.on_play_node.bind(this)}
                     />
 	            </div>
-				<div id="spotify-playing">Now Playing...</div>
+				<div id="spotify-playing">
+                    Now Playing: {get_node(this.state.data, this.state.playing_id ?? 'stars')!.title}
+                    <button onClick={this.append_playing.bind(this)}>Link</button>
+                </div>
 			</div>
 		);
 	}
+
+    on_play_node(id: string) {
+        this.setState({ playing_id: id });
+    }
+
+    append_playing() {
+        if (this.state.selected_id && this.state.playing_id) {
+            if (! get_link(this.state.data, this.state.selected_id, this.state.playing_id)) {    // if the link doesn't already exist
+                var max_index = 1;
+                get_node_links(this.state.data, this.state.selected_id).forEach(link => {
+                    if (link.index > max_index) {
+                        max_index = link.index;
+                    }
+                });
+
+                /* Create the new link */
+                this.setState((old_state) => {
+                    var data = old_state.data;
+
+                    data.links.push({ source: this.state.selected_id!, target: this.state.playing_id!, index: max_index + 1 })
+
+                    return { data: data };
+                });
+            }
+        }
+    }
 
     on_links_reorder(target_ids: string[])
     {
