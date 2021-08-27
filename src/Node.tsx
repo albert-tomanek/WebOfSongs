@@ -33,6 +33,6 @@ export function get_node_links(data: WOSGraphData, node_id: string): WOSGraphLin
 	return data.links.filter((link: WOSGraphLink) => link.source === node_id);
 }
 
-export function get_link(data: WOSGraphData, id_from: string, id_to: string): WOSGraphLink {
-    return data.links.find((link: WOSGraphLink) => (link.source === id_from) && (link.target === id_to))!;
+export function get_link(data: WOSGraphData, id_from: string, id_to: string): WOSGraphLink|null {
+    return data.links.find((link: WOSGraphLink) => (link.source === id_from) && (link.target === id_to)) ?? null;
 }

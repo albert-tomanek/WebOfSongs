@@ -52,8 +52,9 @@ export class WOSGraph extends React.Component<WOSGraphProps, {}> {
     }
 
     static CONFIG = {
-        nodeHighlightBehavior: true,
         directed: true,
+        staticGraphWithDragAndDrop: true,
+        nodeHighlightBehavior: true,
         node: {
             color: "lightgreen",
             size: {width: 1950, height: 690},   // pixels x10 for some reason...  https://danielcaldas.github.io/react-d3-graph/docs/#node-size

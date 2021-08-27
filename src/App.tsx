@@ -16,15 +16,16 @@ import { WOSNode, get_node, get_node_links, get_link } from './Node';
 
 var TEST_DATA: WOSGraphData = {       // https://github.com/danielcaldas/react-d3-graph/pull/104
     nodes: [
-        { id: "Harry", title: "Seven", band: "Andrew Huang", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" },
-        { id: "Sally", title: "Cold & Clear", band: "Liam Bailey", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" },
-        { id: "Alice", title: "Stars", band: "Ivy Lab", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" },
-        { id: "Brian", title: "Fahrenheit", band: "Matt Zo", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" }
+        { id: "seven", title: "Seven", band: "Andrew Huang", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" },
+        { id: "cold&clear", title: "Cold & Clear", band: "Liam Bailey", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" },
+        { id: "stars", title: "Stars", band: "Ivy Lab", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" },
+        { id: "fahrenheit", title: "Fahrenheit", band: "Matt Zo", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" }
     ],
     links: [
-        { source: "Harry", index: 2, target: "Sally" },
-        { source: "Harry", index: 1, target: "Alice" },
-        { source: "Harry", index: 3, target: "Brian" },
+        { source: "seven", index: 2, target: "cold&clear" },
+        { source: "seven", index: 1, target: "stars" },
+        { source: "seven", index: 3, target: "fahrenheit" },
+        { source: "fahrenheit", index: 1, target: "stars" },
     ],
 };
 
@@ -70,6 +71,7 @@ class App extends React.Component<AppProps, AppState> {
                                 data={this.state.data}
                                 node_id={this.state.selected_id}
                                 cb_reorder={this.on_links_reorder.bind(this)}
+                                cb_delete_link={this.on_delete_link.bind(this)}
                             />
                         }
                     </div>
@@ -98,6 +100,19 @@ class App extends React.Component<AppProps, AppState> {
             });
 
             App.recompute_link_color(data, old_state.selected_id!);
+
+            return { data: data };
+        });
+    }
+
+    on_delete_link(id_from: string, id_to: string) {
+        this.setState((old_state) => {
+            var data = old_state.data;
+
+            var index = data.links.findIndex((link: WOSGraphLink) => (link.source === id_from) && (link.target === id_to))!;
+            if (index != -1) {
+                data.links.splice(index, 1);
+            }
 
             return { data: data };
         });

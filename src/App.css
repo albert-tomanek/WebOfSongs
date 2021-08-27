@@ -10,17 +10,6 @@ body {
 
 /* UI parts */
 
-#ordering-panel {
-    width: 240px;
-    padding: 24px;
-    flex-shrink: 0;
-
-    background: yellow;
-    border-image: linear-gradient(to right, #ddd, transparent) 1 100%;
-    border-right-width: 8px;
-    border-right-style: solid;
-}
-
 #song-graph {
     flex-grow: 1;
     position: relative;
@@ -32,6 +21,39 @@ body {
 
     background: gray;
     color: white;
+}
+
+#ordering-panel {
+    width: 280px;
+    padding: 24px;
+    flex-shrink: 0;
+
+    background: white;
+    border-image: linear-gradient(to right, #ddd, transparent) 1 100%;
+    border-right-width: 8px;
+    border-right-style: solid;
+}
+
+.ordering-elt > div {
+    font-size: 16pt;
+    font-family: Roboto;
+    font-weight: lighter;
+    color: #444;
+}
+
+.ordering-elt > .bin {
+    opacity: 0;
+
+    padding: 6px 4px;
+    border-radius: 4px;
+}
+
+.ordering-elt:hover > .bin {
+    opacity: 1;
+}
+
+.bin:hover {
+    background: hsla(0, 0%, 0%, 0.08);
 }
 
 /* Song node */
