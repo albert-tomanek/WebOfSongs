@@ -12,9 +12,13 @@ body {
 
 #ordering-panel {
     width: 240px;
-    text-align: center;
+    padding: 24px;
+    flex-shrink: 0;
 
     background: yellow;
+    border-image: linear-gradient(to right, #ddd, transparent) 1 100%;
+    border-right-width: 8px;
+    border-right-style: solid;
 }
 
 #song-graph {
@@ -63,4 +67,12 @@ body {
     line-height: 16px;
 
     color: #8E8E8E;
+}
+
+.song-node-img > svg {
+    display: none;
+}
+
+.song-node-img:hover > svg {
+    display: block;
 }

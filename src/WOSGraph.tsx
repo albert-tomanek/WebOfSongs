@@ -2,6 +2,7 @@ import React from 'react';
 import {
     Graph as D3Graph,
     GraphProps as D3GraphProps,
+    GraphData as D3GraphData,
     GraphNode as D3GraphNode,
 	GraphLink as D3GraphLink,
 } from "react-d3-graph";
@@ -17,6 +18,8 @@ export interface WOSGraphNode extends D3GraphNode {
 export interface WOSGraphLink extends D3GraphLink {
 	index: number;
 }
+
+export type WOSGraphData = D3GraphData<WOSGraphNode, WOSGraphLink>;
 
 /* Component */
 
@@ -50,6 +53,7 @@ export class WOSGraph extends React.Component<WOSGraphProps, {}> {
 
     static CONFIG = {
         nodeHighlightBehavior: true,
+        directed: true,
         node: {
             color: "lightgreen",
             size: {width: 1950, height: 690},   // pixels x10 for some reason...  https://danielcaldas.github.io/react-d3-graph/docs/#node-size
@@ -58,6 +62,7 @@ export class WOSGraph extends React.Component<WOSGraphProps, {}> {
             viewGenerator: (node: WOSGraphNode) => React.createElement(WOSNode, {node: node}, null),
         },
         link: {
+            color: "black",
             highlightColor: "lightblue",
             strokeWidth: 4,
         },
