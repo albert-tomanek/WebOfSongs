@@ -3,7 +3,7 @@ import { GraphData as D3GraphData } from "react-d3-graph";
 
 import { WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 
-interface WOSNodeProps {
+export interface WOSNodeProps {
 	node: WOSGraphNode;
 	shadow?: number;		/* [0,1] */
 	dragHandleProps?: any;

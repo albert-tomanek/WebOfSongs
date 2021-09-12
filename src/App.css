@@ -24,14 +24,17 @@ body {
 }
 
 #ordering-panel {
-    width: 280px;
-    padding: 24px;
+    width: 330px;
     flex-shrink: 0;
 
     background: white;
     border-image: linear-gradient(to right, #ddd, transparent) 1 100%;
     border-right-width: 8px;
     border-right-style: solid;
+}
+
+#ordering-panel #now-playing {
+    border-top: 1px solid #9a9a9a;
 }
 
 .ordering-elt > div {
@@ -41,14 +44,11 @@ body {
     color: #444;
 }
 
-.ordering-elt > .bin {
+.ordering-elt > .hide {
     opacity: 0;
-
-    padding: 6px 4px;
-    border-radius: 4px;
 }
 
-.ordering-elt:hover > .bin {
+.ordering-elt:hover > .hide {
     opacity: 1;
 }
 

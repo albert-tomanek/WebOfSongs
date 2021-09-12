@@ -3,7 +3,7 @@ import { GraphData as D3GraphData } from "react-d3-graph";
 import DraggableList from "react-draggable-list";
 
 import { WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
-import { WOSNode, get_node, get_node_links } from './Node';
+import { WOSNode, WOSNodeProps, get_node, get_node_links } from './Node';
 
 import Bin from './bin.svg';
 
@@ -47,7 +47,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 
 	render() {
 		return (
-			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", height: "100%"}}>
+			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", height: "100%", padding: "24px"}}>
 				<h1 style={{display: "flex", justifyContent: "left"}}>{get_node(this.props.data, this.props.node_id)!.title}</h1>
                 <DraggableList<WOSGraphNode, any, ListTemplate>
                     list={this.state.list}
@@ -63,6 +63,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
                     }}
                 />
                 <div className="song-node" style={{borderStyle: "dashed"}}></div>
+                <div style={{background: "red", flexGrow: 1}} />
 			</div>
 		);
 	}
@@ -70,24 +71,47 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 
 /* List Template */
 
+interface OrderingEltProps extends WOSNodeProps {
+    node: WOSGraphNode,
+    index?: number,
+    action_icon_src: string;
+    action_callback: (id: string) => void;
+    action_hide_unless_hover: boolean;
+}
+
+export const OrderingElt: React.FC<OrderingEltProps> = (p) => {
+    return (
+        <div className="ordering-elt" style={{display: 'flex', flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
+            <div>
+                {p.index}.
+            </div>
+            <WOSNode
+                node={p.node}
+                dragHandleProps={p.dragHandleProps}
+                shadow={p.shadow}
+                cb_play_node={p.cb_play_node}
+            />
+            <img className="bin" style={{padding: "6px 4px", borderRadius: "4px"}} src={p.action_icon_src} width="24px" height="24px"
+                onClick={() => p.action_callback(p.node.id)}
+            />
+        </div>
+    );
+}
+
 class ListTemplate extends React.Component<any, any> {
     render() {
         return (
-            <div className="ordering-elt" style={{display: 'flex', flexDirection: "row", alignItems: "center", justifyContent: "space-between"}}>
-                <div>
-                    {1 + this.props.commonProps.list.findIndex((node: WOSGraphNode) => node.id == this.props.item.id)}.
-                </div>
-                <WOSNode
-                    node={this.props.item}
-                    key={this.props.itemKey}
-                    dragHandleProps={this.props.dragHandleProps}
-                    shadow={this.props.itemSelected}
-                    cb_play_node={this.props.commonProps.cb_play_node}
-                />
-                <img className="bin" src={Bin} width="24px" height="24px"
-                    onClick={() => this.props.commonProps.delete_link_with(this.props.item.id)}
-                />
-            </div>
+            <OrderingElt
+                node={this.props.item}
+                key={this.props.itemKey}
+                index={1 + this.props.commonProps.list.findIndex((node: WOSGraphNode) => node.id == this.props.item.id)}
+                shadow={this.props.itemSelected}
+                dragHandleProps={this.props.dragHandleProps}
+                cb_play_node={this.props.commonProps.cb_play_node}
+                action_callback={id => this.props.commonProps.delete_link_with(id)}
+                action_icon_src={Bin}
+                action_hide_unless_hover={true}
+            />
         );
     }
 }

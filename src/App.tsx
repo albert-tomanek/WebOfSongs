@@ -11,8 +11,10 @@ import {
 } from "react-d3-graph";
 
 import { WOSGraph, WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
-import { NodePanel } from './NodePanel';
+import { NodePanel, OrderingElt } from './NodePanel';
 import { WOSNode, get_node, get_node_links, get_link } from './Node';
+
+import Plus from './plus.svg';
 
 var TEST_DATA: WOSGraphData = {       // https://github.com/danielcaldas/react-d3-graph/pull/104
     nodes: [
@@ -68,15 +70,32 @@ class App extends React.Component<AppProps, AppState> {
 			<div style={{display: "flex", flexDirection: "column", height: "100%"}}>
 	            <div style={{display: "flex", flexDirection: "row", flexGrow: 1}}>
 	    			<div id="ordering-panel">
-                        { this.state.selected_id &&
-                            <NodePanel
-                                data={this.state.data}
-                                node_id={this.state.selected_id}
-                                cb_reorder={this.on_links_reorder.bind(this)}
-                                cb_delete_link={this.on_delete_link.bind(this)}
-                                cb_play_node={this.on_play_node.bind(this)}
-                            />
-                        }
+                        <div style={{display: "flex", flexDirection: "column", alignItems: "stretch", height: "100%"}}>
+                            { this.state.selected_id ?
+                                <NodePanel
+                                    data={this.state.data}
+                                    node_id={this.state.selected_id}
+
+                                    cb_reorder={this.on_links_reorder.bind(this)}
+                                    cb_delete_link={this.on_delete_link.bind(this)}
+                                    cb_play_node={this.on_play_node.bind(this)}
+                                />
+                                :
+                                <div style={{flexGrow: 1}} />
+                            }
+
+                            <div id="now-playing" style={{padding: "16px"}}>
+                                <div style={{paddingBottom: "12px"}}>Now playing:</div>
+                                <OrderingElt
+                                    node={get_node(this.state.data, this.state.playing_id ?? 'stars')!}
+                                    index={1}
+                                    shadow={1}
+                                    action_hide_unless_hover={false}
+                                    action_icon_src={Plus}
+                                    action_callback={this.link_to_current.bind(this)}
+                                />
+                            </div>
+                        </div>
                     </div>
                     <WOSGraph id="song-graph"
                         data={this.state.data}
@@ -84,10 +103,6 @@ class App extends React.Component<AppProps, AppState> {
                         cb_play_node={this.on_play_node.bind(this)}
                     />
 	            </div>
-				<div id="spotify-playing">
-                    Now Playing: {get_node(this.state.data, this.state.playing_id ?? 'stars')!.title}
-                    <button onClick={this.append_playing.bind(this)}>Link</button>
-                </div>
 			</div>
 		);
 	}
@@ -96,25 +111,21 @@ class App extends React.Component<AppProps, AppState> {
         this.setState({ playing_id: id });
     }
 
-    append_playing() {
+    link_to_current() {
+        /* Link the currently playing song to the currently selected song */
+
         if (this.state.selected_id && this.state.playing_id) {
-            if (! get_link(this.state.data, this.state.selected_id, this.state.playing_id)) {    // if the link doesn't already exist
-                var max_index = 1;
-                get_node_links(this.state.data, this.state.selected_id).forEach(link => {
-                    if (link.index > max_index) {
-                        max_index = link.index;
-                    }
-                });
+            /* Create the new link */
+            this.setState((old_state) => {
+                var data = old_state.data;
 
-                /* Create the new link */
-                this.setState((old_state) => {
-                    var data = old_state.data;
+                if (! get_link(data, old_state.selected_id!, old_state.playing_id!)) {    // if the link doesn't already exist
+                    var num_links = get_node_links(data, old_state.selected_id!).length;
+                    data.links.push({ source: this.state.selected_id!, target: this.state.playing_id!, index: num_links + 1 });
+                }
 
-                    data.links.push({ source: this.state.selected_id!, target: this.state.playing_id!, index: max_index + 1 })
-
-                    return { data: data };
-                });
-            }
+                return { data: data };
+            });
         }
     }
 
