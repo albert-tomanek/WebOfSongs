@@ -52,7 +52,7 @@ body {
     opacity: 1;
 }
 
-.bin:hover {
+.ordering-elt > img:hover {
     background: hsla(0, 0%, 0%, 0.08);
 }
 

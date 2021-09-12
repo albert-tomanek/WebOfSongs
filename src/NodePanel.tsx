@@ -47,7 +47,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 
 	render() {
 		return (
-			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", height: "100%", padding: "24px"}}>
+			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", padding: "24px"}}>
 				<h1 style={{display: "flex", justifyContent: "left"}}>{get_node(this.props.data, this.props.node_id)!.title}</h1>
                 <DraggableList<WOSGraphNode, any, ListTemplate>
                     list={this.state.list}
@@ -62,8 +62,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
                         cb_play_node: this.props.cb_play_node,
                     }}
                 />
-                <div className="song-node" style={{borderStyle: "dashed"}}></div>
-                <div style={{background: "red", flexGrow: 1}} />
+                <div style={{flexGrow: 1}} />
 			</div>
 		);
 	}
@@ -91,7 +90,7 @@ export const OrderingElt: React.FC<OrderingEltProps> = (p) => {
                 shadow={p.shadow}
                 cb_play_node={p.cb_play_node}
             />
-            <img className="bin" style={{padding: "6px 4px", borderRadius: "4px"}} src={p.action_icon_src} width="24px" height="24px"
+            <img className={p.action_hide_unless_hover ? "hide" : ""} style={{padding: "6px 4px", borderRadius: "4px"}} src={p.action_icon_src} width="24px" height="24px"
                 onClick={() => p.action_callback(p.node.id)}
             />
         </div>

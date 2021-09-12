@@ -85,15 +85,22 @@ class App extends React.Component<AppProps, AppState> {
                             }
 
                             <div id="now-playing" style={{padding: "16px"}}>
-                                <div style={{paddingBottom: "12px"}}>Now playing:</div>
-                                <OrderingElt
-                                    node={get_node(this.state.data, this.state.playing_id ?? 'stars')!}
-                                    index={1}
-                                    shadow={1}
-                                    action_hide_unless_hover={false}
-                                    action_icon_src={Plus}
-                                    action_callback={this.link_to_current.bind(this)}
-                                />
+                                { this.state.playing_id &&
+                                    <>
+                                        <div style={{paddingBottom: "16px"}}>Now playing:</div>
+                                        <OrderingElt
+                                            node={get_node(this.state.data, this.state.playing_id)!}
+                                            index={1}
+                                            shadow={1}
+                                            action_hide_unless_hover={false}
+                                            action_icon_src={Plus}
+                                            action_callback={this.link_to_current.bind(this)}
+                                        />
+                                    </>
+                                }
+                                { !this.state.playing_id &&
+                                    <i>Play a song in Spotify to add it to the graph.</i>
+                                }
                             </div>
                         </div>
                     </div>

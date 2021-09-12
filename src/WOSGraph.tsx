@@ -29,10 +29,15 @@ interface WOSGraphProps extends D3GraphProps<WOSGraphNode, D3GraphLink> {
 }
 
 export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
+    r_container: any;
+
     constructor(props: WOSGraphProps) {
         super(props);
 
+        this.r_container = React.createRef();
         this.state = {config: {
+            width: 200,
+            height: 200,
             directed: true,
             staticGraphWithDragAndDrop: true,
             nodeHighlightBehavior: true,
@@ -57,6 +62,28 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
         }};
     }
 
+    componentDidMount() {
+        // Mrrrrrrh here's the issue you're looking for https://github.com/danielcaldas/react-d3-graph/issues/399
+        console.log('component mounted')
+        var resizeObserver = new ResizeObserver((entries) => {
+            // this is only ever a single element list of the one parent container we're observing
+            for (let entry of entries) {
+                if (entry.contentRect) {
+                    console.log(entry.contentRect.width, entry.contentRect.height)
+
+                    this.setState(state => {
+                        state.config.width  = entry.contentRect.width;
+                        state.config.height = entry.contentRect.height - 5;     // The D3Graph has a 5px internal padding for dsome reason??
+
+                        return state;
+                    });
+                }
+            }
+        });
+
+        resizeObserver.observe(this.r_container.current);
+    }
+
     on_click_node(id: string) {
         if (this.props.cb_focus_node) {
             this.props.cb_focus_node(id);
@@ -68,14 +95,45 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
     }
 
     render() {
+        // Manually expand the graph to fit. Thanks bro:    https://github.com/danielcaldas/react-d3-graph/issues/332#issuecomment-650354806
+        // const containerResizeRef = React.useCallback((containerNode) => {
+        //     if (containerNode) {
+        //         // // set the graph size to the size of the parent when the component mounts
+        //         // setGraphSize({
+        //         //     width: containerNode.offsetWidth,
+        //         //     height: containerNode.offsetHeight,
+        //         // });
+        //
+        //         const resizeObserver = new ResizeObserver((entries) => {
+        //             // this is only ever a single element list of the one parent container we're observing
+        //             for (let entry of entries) {
+        //                 if (entry.contentRect) {
+        //                     console.log(entry.contentRect.width, entry.contentRect.height)
+        //
+        //                     this.setState(state => {
+        //                         state.config.width  = entry.contentRect.width;
+        //                         state.config.height = entry.contentRect.height;
+        //
+        //                         return state;
+        //                     });
+        //                 }
+        //             }
+        //         });
+        //
+        //         resizeObserver.observe(containerNode);
+        //     }
+        // }, []);
+
         return (
-            <D3Graph
+            <div style={{/*background: "red",*/ flexGrow: 1}} ref={this.r_container} >
+                <D3Graph
                 id="graph-id"
                 data={this.props.data}
                 config={this.state.config}
                 onClickLink={this.on_click_link.bind(this)}
                 onClickGraph={() => this.props.cb_focus_node ? this.props.cb_focus_node(null) : null}
-            />
+                />
+            </div>
         );
     }
 }
