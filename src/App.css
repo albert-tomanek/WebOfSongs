@@ -15,6 +15,14 @@ body {
     position: relative;
 }
 
+.my-graph-container > div {
+    /* Dunno why, but the D3Graph <svg> is wrapped in a div that we can't access, and this div
+     * is stopping it from growing. This is a botch to access the div and make it grow.         */
+
+    height: 100%;
+    width: 100%;
+}
+
 #spotify-playing {
     padding: 18px;
     font-size: 24pt;

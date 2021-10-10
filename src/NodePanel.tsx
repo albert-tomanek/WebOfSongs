@@ -47,7 +47,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 
 	render() {
 		return (
-			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", padding: "24px"}}>
+			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", height: "100%", padding: "24px"}}>
 				<h1 style={{display: "flex", justifyContent: "left"}}>{get_node(this.props.data, this.props.node_id)!.title}</h1>
                 <DraggableList<WOSGraphNode, any, ListTemplate>
                     list={this.state.list}

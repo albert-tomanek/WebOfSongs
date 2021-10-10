@@ -72,8 +72,8 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
                     console.log(entry.contentRect.width, entry.contentRect.height)
 
                     this.setState(state => {
-                        state.config.width  = entry.contentRect.width;
-                        state.config.height = entry.contentRect.height - 5;     // The D3Graph has a 5px internal padding for dsome reason??
+                        state.config.width  = "100%";//entry.contentRect.width;
+                        state.config.height = "100%";//entry.contentRect.height - 5;     // The D3Graph has a 5px internal padding for some reason??
 
                         return state;
                     });
@@ -95,37 +95,8 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
     }
 
     render() {
-        // Manually expand the graph to fit. Thanks bro:    https://github.com/danielcaldas/react-d3-graph/issues/332#issuecomment-650354806
-        // const containerResizeRef = React.useCallback((containerNode) => {
-        //     if (containerNode) {
-        //         // // set the graph size to the size of the parent when the component mounts
-        //         // setGraphSize({
-        //         //     width: containerNode.offsetWidth,
-        //         //     height: containerNode.offsetHeight,
-        //         // });
-        //
-        //         const resizeObserver = new ResizeObserver((entries) => {
-        //             // this is only ever a single element list of the one parent container we're observing
-        //             for (let entry of entries) {
-        //                 if (entry.contentRect) {
-        //                     console.log(entry.contentRect.width, entry.contentRect.height)
-        //
-        //                     this.setState(state => {
-        //                         state.config.width  = entry.contentRect.width;
-        //                         state.config.height = entry.contentRect.height;
-        //
-        //                         return state;
-        //                     });
-        //                 }
-        //             }
-        //         });
-        //
-        //         resizeObserver.observe(containerNode);
-        //     }
-        // }, []);
-
         return (
-            <div style={{/*background: "red",*/ flexGrow: 1}} ref={this.r_container} >
+            <div className="my-graph-container" style={{flexGrow: 1}} ref={this.r_container} >
                 <D3Graph
                 id="graph-id"
                 data={this.props.data}
