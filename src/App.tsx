@@ -5,6 +5,10 @@ import DraggableList from 'react-draggable-list';
 import {event as currentEvent} from 'd3-selection';
 import './App.css';
 
+// import { SpotifyPlaybackSDK } from 'spotify-playback-sdk-node';     // Alternative: https://github.com/thelinmichael/spotify-web-api-node#usage
+// import 'val-loader!./fetch-spotify';
+
+/* UI Elements */
 import {
     GraphLink as D3GraphLink,
     GraphData as D3GraphData,
@@ -43,9 +47,43 @@ interface AppState {
     data: WOSGraphData;
 }
 
+// https://github.com/gilbarbara/react-spotify-web-playback/blob/c3fcf5022dad4b13c15363b5632a14b7b4ece9ce/src/utils.ts#L49
+function loadSpotifyPlayer(): Promise<any> {
+    // Safe to be called multiple times.
+    return new Promise<void>((resolve, reject) => {
+        const scriptTag = document.getElementById('spotify-player');
+
+        if (!scriptTag) {
+            const script = document.createElement('script');
+
+            script.id = 'spotify-player';
+            script.type = 'text/javascript';
+            script.async = false;
+            script.defer = true;
+            script.src = 'https://sdk.scdn.co/spotify-player.js';
+            // script.onload = () => resolve();
+            script.onerror = (error: any) => reject(new Error(`loadScript: ${error.message}`));
+
+            window.onSpotifyWebPlaybackSDKReady = () => resolve();//() => {
+                // const token = '[My Spotify Web API access token]';
+                // const player = new Spotify.Player({
+                //     name: 'Web Playback SDK Quick Start Player',
+                //     getOAuthToken: cb => { cb(token); }
+                // });
+            // }
+            document.head.appendChild(script);
+        } else {
+            resolve();
+        }
+    });
+}
+
 class App extends React.Component<AppProps, AppState> {
+
 	constructor(props: AppProps) {
 		super(props);
+
+        loadSpotifyPlayer();
 
 		this.state = {
             selected_id: null,

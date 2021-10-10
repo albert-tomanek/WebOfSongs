@@ -64,7 +64,6 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
 
     componentDidMount() {
         // Mrrrrrrh here's the issue you're looking for https://github.com/danielcaldas/react-d3-graph/issues/399
-        console.log('component mounted')
         var resizeObserver = new ResizeObserver((entries) => {
             // this is only ever a single element list of the one parent container we're observing
             for (let entry of entries) {
