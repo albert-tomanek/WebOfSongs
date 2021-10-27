@@ -5,8 +5,7 @@ import DraggableList from 'react-draggable-list';
 import {event as currentEvent} from 'd3-selection';
 import './App.css';
 
-// import { SpotifyPlaybackSDK } from 'spotify-playback-sdk-node';     // Alternative: https://github.com/thelinmichael/spotify-web-api-node#usage
-// import 'val-loader!./fetch-spotify';
+// https://cnpmjs.org/package/@types/spotify-web-playback-sdk
 
 /* UI Elements */
 import {
@@ -47,13 +46,19 @@ interface AppState {
     data: WOSGraphData;
 }
 
-// https://github.com/gilbarbara/react-spotify-web-playback/blob/c3fcf5022dad4b13c15363b5632a14b7b4ece9ce/src/utils.ts#L49
+declare global {    // We need to declare this 'static' variable as part of the Window class in order to be able to use it.
+    interface Window {
+        _swpsdk_loaded?: boolean;
+    }
+}
+
+// function adapted from: https://github.com/gilbarbara/react-spotify-web-playback/blob/c3fcf5022dad4b13c15363b5632a14b7b4ece9ce/src/utils.ts#L49
 function loadSpotifyPlayer(): Promise<any> {
     // Safe to be called multiple times.
     return new Promise<void>((resolve, reject) => {
         const scriptTag = document.getElementById('spotify-player');
 
-        if (!scriptTag) {
+        if (!window._swpsdk_loaded) {
             const script = document.createElement('script');
 
             script.id = 'spotify-player';
@@ -61,29 +66,44 @@ function loadSpotifyPlayer(): Promise<any> {
             script.async = false;
             script.defer = true;
             script.src = 'https://sdk.scdn.co/spotify-player.js';
-            // script.onload = () => resolve();
+            // script.onload = () => resolve(); // Too early. Spotify attaches its own hook to `window`.
             script.onerror = (error: any) => reject(new Error(`loadScript: ${error.message}`));
 
-            window.onSpotifyWebPlaybackSDKReady = () => resolve();//() => {
-                // const token = '[My Spotify Web API access token]';
-                // const player = new Spotify.Player({
-                //     name: 'Web Playback SDK Quick Start Player',
-                //     getOAuthToken: cb => { cb(token); }
-                // });
-            // }
+            window.onSpotifyWebPlaybackSDKReady = () => {
+                window._swpsdk_loaded = true;
+                resolve();
+            };
+
             document.head.appendChild(script);
         } else {
+            // `window.onSpotifyWebPlaybackSDKReady` must have already been invoked.
+
             resolve();
         }
     });
 }
 
 class App extends React.Component<AppProps, AppState> {
+    //https://developer.spotify.com/documentation/web-playback-sdk/reference/#object-web-playback-player
+    static player: Spotify.Player|null = null;
 
 	constructor(props: AppProps) {
 		super(props);
 
-        loadSpotifyPlayer();
+        loadSpotifyPlayer().then(() => {
+            console.log(Spotify.Player.length)
+            if (!App.player) {
+                var player = new Spotify.Player({
+                    name: 'Web Playback SDK Quick Start Player',
+                    getOAuthToken: cb => { cb('[My Spotify Web API access token]'); }
+                });
+                player.connect().then(success => {
+                    if (success) {
+                        App.player = player;
+                    }
+                });
+            }
+        });
 
 		this.state = {
             selected_id: null,
