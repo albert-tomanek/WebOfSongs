@@ -12,6 +12,7 @@ export interface WOSNodeProps {
 	cb_play_node?:  (id: string) => void;
 }
 
+// Consider Design guidelines: https://developer.spotify.com/documentation/general/design-and-branding/
 export const WOSNode: React.FC<WOSNodeProps> = (p) => {
     return (
         <div className="song-node" style={{display: "flex", flexDirection: "row", filter: `drop-shadow(1px 4px 8px rgba(0, 0, 0, ${(p.shadow??0)*0.30}))`}} {...p.dragHandleProps}>

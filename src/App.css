@@ -10,6 +10,13 @@ body {
 
 /* UI parts */
 
+.account-icon {
+    background: white;
+
+    border-radius: 50%;
+    filter: drop-shadow(2px 4px 4px #40404080);
+}
+
 #song-graph {
     flex-grow: 1;
     position: relative;

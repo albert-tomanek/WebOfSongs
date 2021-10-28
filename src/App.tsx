@@ -13,6 +13,7 @@ import {
     GraphData as D3GraphData,
 } from "react-d3-graph";
 
+import { SpotifyButton } from './AccountButtons'
 import { WOSGraph, WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 import { NodePanel, OrderingElt } from './NodePanel';
 import { WOSNode, get_node, get_node_links, get_link } from './Node';
@@ -44,71 +45,20 @@ interface AppState {
     selected_id: string | null;
     playing_id: string | null;
     data: WOSGraphData;
-}
 
-declare global {    // We need to declare this 'static' variable as part of the Window class in order to be able to use it.
-    interface Window {
-        _swpsdk_loaded?: boolean;
-    }
-}
-
-// function adapted from: https://github.com/gilbarbara/react-spotify-web-playback/blob/c3fcf5022dad4b13c15363b5632a14b7b4ece9ce/src/utils.ts#L49
-function loadSpotifyPlayer(): Promise<any> {
-    // Safe to be called multiple times.
-    return new Promise<void>((resolve, reject) => {
-        const scriptTag = document.getElementById('spotify-player');
-
-        if (!window._swpsdk_loaded) {
-            const script = document.createElement('script');
-
-            script.id = 'spotify-player';
-            script.type = 'text/javascript';
-            script.async = false;
-            script.defer = true;
-            script.src = 'https://sdk.scdn.co/spotify-player.js';
-            // script.onload = () => resolve(); // Too early. Spotify attaches its own hook to `window`.
-            script.onerror = (error: any) => reject(new Error(`loadScript: ${error.message}`));
-
-            window.onSpotifyWebPlaybackSDKReady = () => {
-                window._swpsdk_loaded = true;
-                resolve();
-            };
-
-            document.head.appendChild(script);
-        } else {
-            // `window.onSpotifyWebPlaybackSDKReady` must have already been invoked.
-
-            resolve();
-        }
-    });
+    player: Spotify.Player|null;    // https://developer.spotify.com/documentation/web-playback-sdk/reference/#object-web-playback-player
 }
 
 class App extends React.Component<AppProps, AppState> {
-    //https://developer.spotify.com/documentation/web-playback-sdk/reference/#object-web-playback-player
-    static player: Spotify.Player|null = null;
-
 	constructor(props: AppProps) {
 		super(props);
-
-        loadSpotifyPlayer().then(() => {
-            console.log(Spotify.Player.length)
-            if (!App.player) {
-                var player = new Spotify.Player({
-                    name: 'Web Playback SDK Quick Start Player',
-                    getOAuthToken: cb => { cb('[My Spotify Web API access token]'); }
-                });
-                player.connect().then(success => {
-                    if (success) {
-                        App.player = player;
-                    }
-                });
-            }
-        });
 
 		this.state = {
             selected_id: null,
             playing_id: null,
             data: TEST_DATA,
+
+            player: null,
 		};
 	}
 
@@ -168,9 +118,52 @@ class App extends React.Component<AppProps, AppState> {
                         cb_play_node={this.on_play_node.bind(this)}
                     />
 	            </div>
+                <div id="icons-container" style={{position: "absolute", right: "12px", top: "12px", display: "flex", flexDirection: "column", gap: "12px"}}>
+                    <SpotifyButton on_aquire_token={this.on_spotify_login.bind(this)}/>
+                    <div className="account-icon" style={{width: "48px", height: "48px"}}/>
+                </div>
 			</div>
 		);
 	}
+
+    /* Account callbacks */
+
+    on_spotify_login(access_token: string)
+    {
+        loadSpotifyPlaybackAPI().then(() => {
+            console.log('Loaded Spotify Web Player API');
+
+            var player = new Spotify.Player({
+                name: 'WebOfSongs',
+                getOAuthToken: cb => { cb(access_token); }
+            });
+            player.connect().then(success => {
+                if (success) {
+                    player.addListener('player_state_changed', () => this.on_player_state_changed());
+
+                    this.setState({
+                        player: player
+                    });
+                }
+            });
+        });
+    }
+
+    /* UI callbacks */
+
+    on_player_state_changed() {
+        if (this.state.player)
+        {
+            this.state.player.getCurrentState().then(state => {
+                if (state == null) {
+                    console.error('User is not playing music through the Web Playback SDK');
+                }
+                else {
+                    console.log(state.position);
+                }
+            })
+        }
+    }
 
     on_play_node(id: string) {
         this.setState({ playing_id: id });
@@ -242,3 +235,41 @@ class App extends React.Component<AppProps, AppState> {
 }
 
 export default App;
+
+/* API stuff */
+declare global {    // We need to declare this 'static' variable as part of the Window class in order to be able to use it.
+    interface Window {
+        _swpsdk_loaded?: boolean;
+    }
+}
+
+// function adapted from: https://github.com/gilbarbara/react-spotify-web-playback/blob/c3fcf5022dad4b13c15363b5632a14b7b4ece9ce/src/utils.ts#L49
+function loadSpotifyPlaybackAPI(): Promise<any> {
+    // Safe to be called multiple times.
+    return new Promise<void>((resolve, reject) => {
+        const scriptTag = document.getElementById('spotify-player');
+
+        if (!window._swpsdk_loaded) {
+            const script = document.createElement('script');
+
+            script.id = 'spotify-player';
+            script.type = 'text/javascript';
+            script.async = false;
+            script.defer = true;
+            script.src = 'https://sdk.scdn.co/spotify-player.js';
+            // script.onload = () => resolve(); // Too early. Spotify attaches its own hook to `window`.
+            script.onerror = (error: any) => reject(new Error(`loadScript: ${error.message}`));
+
+            window.onSpotifyWebPlaybackSDKReady = () => {
+                window._swpsdk_loaded = true;
+                resolve();
+            };
+
+            document.head.appendChild(script);
+        } else {
+            // `window.onSpotifyWebPlaybackSDKReady` must have already been invoked.
+
+            resolve();
+        }
+    });
+}
