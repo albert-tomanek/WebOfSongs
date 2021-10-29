@@ -44,8 +44,8 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
                 highlightStrokeColor: "blue",
                 renderLabel: false,
                 viewGenerator: (node: WOSGraphNode) => {
-                    return React.createElement(WOSNode,{
-                        node: node.id,
+                    return React.createElement(WOSNode, {
+                        node: node,
                         cb_focus_node: this.props.cb_focus_node,
                         cb_play_node:  this.props.cb_play_node,
                     }, null)

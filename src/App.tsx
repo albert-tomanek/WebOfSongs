@@ -97,7 +97,7 @@ class App extends React.Component<AppProps, AppState> {
                                     <>
                                         <div style={{paddingBottom: "16px"}}>Now playing:</div>
                                         <OrderingElt
-                                            node={this.state.playing_id}
+                                            node={{id: this.state.playing_id}}
                                             index={1}
                                             shadow={1}
                                             action_hide_unless_hover={false}
@@ -138,7 +138,7 @@ class App extends React.Component<AppProps, AppState> {
 
     sync_currently_playing() {
         App.spotify.getMyCurrentPlaybackState().then(state => {
-            console.log(state.is_playing, this.state.playing_id)
+            // console.log(state.is_playing, this.state.playing_id)
             if (state.is_playing == false)
             {
                 if (this.state.playing_id != null)
@@ -148,6 +148,9 @@ class App extends React.Component<AppProps, AppState> {
                         playing_id: null
                     });
                 }
+            }
+            else if (!state.item) {
+                // Whaat? return;
             }
             else if (state.item!.uri != this.state.playing_id)
             {
@@ -161,7 +164,7 @@ class App extends React.Component<AppProps, AppState> {
                 });
             }
             else {
-                console.log('(nothing changed)');
+                // console.log('(nothing changed)');
                 // Nothing's changed.
             }
         });
@@ -179,14 +182,33 @@ class App extends React.Component<AppProps, AppState> {
         if (this.state.selected_id && this.state.playing_id) {
             /* Create the new link */
             this.setState((old_state) => {
-                var data = old_state.data;
+                console.log('link to current')
+                var old_data = old_state.data;
+                var new_nodes, new_links;
 
-                if (! get_link(data, old_state.selected_id!, old_state.playing_id!)) {    // if the link doesn't already exist
-                    var num_links = get_node_links(data, old_state.selected_id!).length;
-                    data.links.push({ source: this.state.selected_id!, target: this.state.playing_id!, index: num_links + 1 });
+                /* Create the node if it doesn't exist */
+                if (!get_node(old_data, this.state.playing_id!)) {
+                    new_nodes = old_data.nodes.concat([{id: this.state.playing_id!}]);
+                }
+                else {
+                    new_nodes = old_data.nodes
                 }
 
-                return { data: data };
+                /* Create the link if it doesn't exist */
+                if (!get_link(old_data, old_state.selected_id!, old_state.playing_id!)) {
+                    var num_links = get_node_links(old_data, old_state.selected_id!).length;
+                    new_links = old_data.links.concat([{ source: this.state.playing_id!, target: this.state.selected_id!, index: num_links + 1 }]);
+                }
+                else {
+                    new_links = old_data.links;
+                }
+
+                return {
+                    data: {
+                        nodes: new_nodes,
+                        links: new_links,
+                    }
+                };
             });
         }
     }
