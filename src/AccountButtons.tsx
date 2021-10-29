@@ -51,7 +51,6 @@ export class SpotifyButton extends React.Component<SpotifyButtonProps, SpotifyBu
 						access_token: params.access_token,
 					});
 				});
-
 			} else {
 				// $('#login').show();
 				// $('#loggedin').hide();

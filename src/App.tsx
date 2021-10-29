@@ -2,10 +2,12 @@ import React from 'react';
 import logo from './logo.svg';
 import DraggableList from 'react-draggable-list';
 
+// https://cnpmjs.org/package/@types/spotify-web-playback-sdk
+import SpotifyWebApi from 'spotify-web-api-js';
+
 import {event as currentEvent} from 'd3-selection';
 import './App.css';
 
-// https://cnpmjs.org/package/@types/spotify-web-playback-sdk
 
 /* UI Elements */
 import {
@@ -22,16 +24,16 @@ import Plus from './plus.svg';
 
 var TEST_DATA: WOSGraphData = {       // https://github.com/danielcaldas/react-d3-graph/pull/104
     nodes: [
-        { id: "seven", title: "Seven", band: "Andrew Huang", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" },
-        { id: "cold&clear", title: "Cold & Clear", band: "Liam Bailey", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" },
-        { id: "stars", title: "Stars", band: "Ivy Lab", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" },
-        { id: "fahrenheit", title: "Fahrenheit", band: "Matt Zo", cover_url: "https://image.flaticon.com/icons/png/512/872/872199.png" }
+        { id: "spotify:track:16g1GYkl4ogjX8UxsrRGHM"},
+        { id: "spotify:track:2lpApUodMauXt8yzMeQtOB"},
+        { id: "spotify:track:0bqjS54zmDlYanW8mlx28k"},
+        { id: "spotify:track:2tjNv48TztwpNJZV8DKssQ"}
     ],
     links: [
-        { source: "seven", index: 2, target: "cold&clear" },
-        { source: "seven", index: 1, target: "stars" },
-        { source: "seven", index: 3, target: "fahrenheit" },
-        { source: "fahrenheit", index: 1, target: "stars" },
+        { source: "spotify:track:16g1GYkl4ogjX8UxsrRGHM", index: 2, target: "spotify:track:2lpApUodMauXt8yzMeQtOB" },
+        { source: "spotify:track:16g1GYkl4ogjX8UxsrRGHM", index: 1, target: "spotify:track:0bqjS54zmDlYanW8mlx28k" },
+        { source: "spotify:track:16g1GYkl4ogjX8UxsrRGHM", index: 3, target: "spotify:track:2tjNv48TztwpNJZV8DKssQ" },
+        { source: "spotify:track:2tjNv48TztwpNJZV8DKssQ", index: 1, target: "spotify:track:0bqjS54zmDlYanW8mlx28k" },
     ],
 };
 
@@ -45,20 +47,18 @@ interface AppState {
     selected_id: string | null;
     playing_id: string | null;
     data: WOSGraphData;
-
-    player: Spotify.Player|null;    // https://developer.spotify.com/documentation/web-playback-sdk/reference/#object-web-playback-player
 }
 
 class App extends React.Component<AppProps, AppState> {
-	constructor(props: AppProps) {
+    static spotify = new SpotifyWebApi();
+
+    constructor(props: AppProps) {
 		super(props);
 
 		this.state = {
             selected_id: null,
             playing_id: null,
             data: TEST_DATA,
-
-            player: null,
 		};
 	}
 
@@ -97,7 +97,7 @@ class App extends React.Component<AppProps, AppState> {
                                     <>
                                         <div style={{paddingBottom: "16px"}}>Now playing:</div>
                                         <OrderingElt
-                                            node={get_node(this.state.data, this.state.playing_id)!}
+                                            node={this.state.playing_id}
                                             index={1}
                                             shadow={1}
                                             action_hide_unless_hover={false}
@@ -130,40 +130,44 @@ class App extends React.Component<AppProps, AppState> {
 
     on_spotify_login(access_token: string)
     {
-        loadSpotifyPlaybackAPI().then(() => {
-            console.log('Loaded Spotify Web Player API');
+        App.spotify.setAccessToken(access_token);
 
-            var player = new Spotify.Player({
-                name: 'WebOfSongs',
-                getOAuthToken: cb => { cb(access_token); }
-            });
-            player.connect().then(success => {
-                if (success) {
-                    player.addListener('player_state_changed', () => this.on_player_state_changed());
+        this.sync_currently_playing();
+        setInterval(() => this.sync_currently_playing(), 5000);
+    }
 
+    sync_currently_playing() {
+        App.spotify.getMyCurrentPlaybackState().then(state => {
+            console.log(state.is_playing, this.state.playing_id)
+            if (state.is_playing == false)
+            {
+                if (this.state.playing_id != null)
+                {
+                    console.log('Stopped playing');
                     this.setState({
-                        player: player
+                        playing_id: null
                     });
                 }
-            });
+            }
+            else if (state.item!.uri != this.state.playing_id)
+            {
+                console.log('Next song');
+                this.setState({
+                    playing_id: null    // FIXME: I don't know why you have to make it null first in order to trigger a re-render.
+                }, () => {
+                    this.setState({
+                        playing_id: state.item!.uri
+                    });
+                });
+            }
+            else {
+                console.log('(nothing changed)');
+                // Nothing's changed.
+            }
         });
     }
 
     /* UI callbacks */
-
-    on_player_state_changed() {
-        if (this.state.player)
-        {
-            this.state.player.getCurrentState().then(state => {
-                if (state == null) {
-                    console.error('User is not playing music through the Web Playback SDK');
-                }
-                else {
-                    console.log(state.position);
-                }
-            })
-        }
-    }
 
     on_play_node(id: string) {
         this.setState({ playing_id: id });

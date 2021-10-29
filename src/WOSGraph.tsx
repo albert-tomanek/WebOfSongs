@@ -10,9 +10,6 @@ import {
 import { WOSNode } from './Node';
 
 export interface WOSGraphNode extends D3GraphNode {
-    title: string;
-    band: string;
-    cover_url: string;
 }
 
 export interface WOSGraphLink extends D3GraphLink {
@@ -48,7 +45,7 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
                 renderLabel: false,
                 viewGenerator: (node: WOSGraphNode) => {
                     return React.createElement(WOSNode,{
-                        node: node,
+                        node: node.id,
                         cb_focus_node: this.props.cb_focus_node,
                         cb_play_node:  this.props.cb_play_node,
                     }, null)

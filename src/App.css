@@ -106,6 +106,16 @@ body {
     color: #8E8E8E;
 }
 
+.title, .band {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.song-node-img {
+    background-color: #8E8E8E;
+}
+
 .song-node-img > svg {
     display: none;
 }
