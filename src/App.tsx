@@ -21,6 +21,7 @@ import { NodePanel, OrderingElt } from './NodePanel';
 import { WOSNode, get_node, get_node_links, get_link } from './Node';
 
 import Plus from './plus.svg';
+import Bomb from './bomb.svg';
 
 var TEST_DATA: WOSGraphData = {       // https://github.com/danielcaldas/react-d3-graph/pull/104
     nodes: [
@@ -122,6 +123,9 @@ class App extends React.Component<AppProps, AppState> {
                     <SpotifyButton on_aquire_token={this.on_spotify_login.bind(this)}/>
                     <div className="account-icon" style={{width: "48px", height: "48px"}}/>
                 </div>
+                <div className="account-icon" style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
+                    <img src={Bomb} style={{padding: "7px"}}/>
+                </div>
 			</div>
 		);
 	}
@@ -173,7 +177,19 @@ class App extends React.Component<AppProps, AppState> {
     /* UI callbacks */
 
     on_play_node(id: string) {
-        this.setState({ playing_id: id });
+
+        App.spotify.getTrack(id.split(':')[2]).then((track_json) => {
+            App.spotify.play({
+                context_uri: track_json.album.uri,
+                offset: {
+                    position: track_json.track_number - 1,  // There was an off-by-one error for some reason. Weird since we're getting the infex from anfd feeding it back to the same API.
+                }
+            }).then(() => {
+                console.log('submitted play')
+                this.sync_currently_playing();
+            })
+        });
+
     }
 
     link_to_current() {
