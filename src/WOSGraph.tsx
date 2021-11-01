@@ -10,6 +10,7 @@ import {
 import { WOSNode } from './Node';
 
 export interface WOSGraphNode extends D3GraphNode {
+    note?: string;
 }
 
 export interface WOSGraphLink extends D3GraphLink {

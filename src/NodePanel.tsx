@@ -2,6 +2,8 @@ import React from 'react';
 import { GraphData as D3GraphData } from "react-d3-graph";
 import DraggableList from "react-draggable-list";
 
+import App from './App';
+import Textarea from 'react-expanding-textarea';
 import { WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 import { WOSNode, WOSNodeProps, get_node, get_node_links } from './Node';
 
@@ -16,6 +18,7 @@ interface NodePanelProps {
 }
 
 interface NodePanelState {
+    title: string|null;
     list: readonly WOSGraphNode[];  // bruh? Dunno why it has to be readonly
 }
 
@@ -24,17 +27,25 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 		super(props);
 
 		this.state = {
+            title: null,
             list: [],
 		};
 	}
 
     componentDidMount() {
         this.setState({
-            list: get_node_links(this.props.data, this.props.node_id).sort((a, b) => a.index - b.index).map(link => get_node(this.props.data, link.target)!)
+            list: get_node_links(this.props.data, this.props.node_id).sort((a, b) => a.index - b.index).map(link => get_node(this.props.data, link.target)!),
+        });
+
+        App.spotify.getTrack(this.props.node_id.split(':')[2]).then((json) => {
+            this.setState({
+                title: json.name,
+            });
         });
     }
 
     componentDidUpdate(old_props: NodePanelProps) {     // This is apparently bad?  https://www.freecodecamp.org/news/get-pro-with-react-setstate-in-10-minutes-d38251d1c781/#third-approach
+        console.log('componentDidUpdate')
         if (this.props !== old_props) {
             this.componentDidMount();
         }
@@ -48,7 +59,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 	render() {
 		return (
 			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", height: "100%", padding: "24px"}}>
-				<h1 style={{display: "flex", justifyContent: "left"}}>{this.props.node_id}</h1>
+				<h1 style={{display: "flex", justifyContent: "left"}}>{this.state.title ?? "░░░░░░░"}</h1>
                 <DraggableList<WOSGraphNode, any, ListTemplate>
                     list={this.state.list}
                     itemKey="id"
@@ -63,10 +74,30 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
                     }}
                 />
                 <div style={{flexGrow: 1}} />
+                <Textarea
+                    defaultValue={get_node(this.props.data, this.props.node_id)!.note ?? ""}
+                    id="note-textarea"
+                    maxLength={3000}
+                    onChange={()=>{}}
+                    placeholder="Note…"
+                    onBlur={(e) => { get_node(this.props.data, this.props.node_id)!.note = e.target.value; }}
+                />
 			</div>
 		);
 	}
 }
+
+// {/* <div>
+//     <form>
+//         <textarea
+//             id="note-textarea"
+//             style=
+//             value={this.state.note}
+//             onChange={(e) => { this.setState({ note: e.target.value }); }}
+//             onBlur={this.on_leave_textarea.bind(this)}   // https://stackoverflow.com/questions/37609049/how-to-correctly-catch-change-focusout-event-on-text-input-in-react-js
+//         />
+//     </form>
+// </div> */}
 
 /* List Template */
 

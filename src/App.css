@@ -30,14 +30,6 @@ body {
     width: 100%;
 }
 
-#spotify-playing {
-    padding: 18px;
-    font-size: 24pt;
-
-    background: gray;
-    color: white;
-}
-
 #ordering-panel {
     width: 330px;
     flex-shrink: 0;
@@ -50,6 +42,26 @@ body {
 
 #ordering-panel #now-playing {
     border-top: 1px solid #9a9a9a;
+}
+
+#note-textarea {
+    resize: none;
+
+    border: 2px solid #9A9A9A;
+    border-top: 0;
+    border-left: 0;
+    border-right: 0;
+
+    font-size: 16pt;
+    font-family: Roboto;
+    font-weight: bold;
+    color: #333;
+}
+
+#note-textarea:focus-visible {
+    outline: none;
+    border-color: black;
+    color: black;
 }
 
 .ordering-elt > div {
