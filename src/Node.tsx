@@ -78,8 +78,12 @@ export function get_node(data: WOSGraphData, node_id: string): WOSGraphNode|null
 	return data.nodes.find((node: WOSGraphNode) => node.id === node_id) ?? null;
 }
 
-export function get_node_links(data: WOSGraphData, node_id: string): WOSGraphLink[] {
+export function get_node_outgoing_links(data: WOSGraphData, node_id: string): WOSGraphLink[] {
 	return data.links.filter((link: WOSGraphLink) => link.source === node_id);
+}
+
+export function get_node_links(data: WOSGraphData, node_id: string): WOSGraphLink[] {
+	return data.links.filter((link: WOSGraphLink) => (link.source === node_id) || (link.target === node_id));
 }
 
 export function get_link(data: WOSGraphData, id_from: string, id_to: string): WOSGraphLink|null {

@@ -5,7 +5,7 @@ import DraggableList from "react-draggable-list";
 import App from './App';
 import Textarea from 'react-expanding-textarea';
 import { WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
-import { WOSNode, WOSNodeProps, get_node, get_node_links } from './Node';
+import { WOSNode, WOSNodeProps, get_node, get_node_outgoing_links } from './Node';
 
 import Bin from './bin.svg';
 
@@ -34,7 +34,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 
     componentDidMount() {
         this.setState({
-            list: get_node_links(this.props.data, this.props.node_id).sort((a, b) => a.index - b.index).map(link => get_node(this.props.data, link.target)!),
+            list: get_node_outgoing_links(this.props.data, this.props.node_id).sort((a, b) => a.index - b.index).map(link => get_node(this.props.data, link.target)!),
         });
 
         App.spotify.getTrack(this.props.node_id.split(':')[2]).then((json) => {

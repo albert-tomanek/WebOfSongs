@@ -18,7 +18,7 @@ import {
 import { SpotifyButton } from './AccountButtons'
 import { WOSGraph, WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 import { NodePanel, OrderingElt } from './NodePanel';
-import { WOSNode, get_node, get_node_links, get_link } from './Node';
+import { WOSNode, get_node, get_node_links, get_node_outgoing_links, get_link } from './Node';
 
 import Plus from './plus.svg';
 import Bomb from './bomb.svg';
@@ -198,7 +198,6 @@ class App extends React.Component<AppProps, AppState> {
         if (this.state.selected_id && this.state.playing_id) {
             /* Create the new link */
             this.setState((old_state) => {
-                console.log('link to current')
                 var old_data = old_state.data;
                 var new_nodes, new_links;
 
@@ -212,8 +211,8 @@ class App extends React.Component<AppProps, AppState> {
 
                 /* Create the link if it doesn't exist */
                 if (!get_link(old_data, old_state.selected_id!, old_state.playing_id!)) {
-                    var num_links = get_node_links(old_data, old_state.selected_id!).length;
-                    new_links = old_data.links.concat([{ source: this.state.playing_id!, target: this.state.selected_id!, index: num_links + 1 }]);
+                    var num_links = get_node_outgoing_links(old_data, old_state.selected_id!).length;
+                    new_links = old_data.links.concat([{ source: this.state.selected_id!, target: this.state.playing_id!, index: num_links + 1 }]);
                 }
                 else {
                     new_links = old_data.links;
@@ -251,19 +250,61 @@ class App extends React.Component<AppProps, AppState> {
 
     on_delete_link(id_from: string, id_to: string) {
         this.setState((old_state) => {
-            var data = old_state.data;
+            var new_links = Array.from(old_state.data.links);
+            var new_nodes = Array.from(old_state.data.nodes);
 
-            var index = data.links.findIndex((link: WOSGraphLink) => (link.source === id_from) && (link.target === id_to))!;
-            if (index != -1) {
-                data.links.splice(index, 1);
+            {
+                /* Find the index of the link and remove it */
+                var index = new_links.findIndex((link: WOSGraphLink) => (link.source === id_from) && (link.target === id_to))!;
+                new_links.splice(index, 1);
             }
 
-            return { data: data };
+            return {
+                data: {
+                    nodes: new_nodes,
+                    links: new_links,
+                }
+            };
+        }, () => {
+            /* Remove either node if it doesn't have any more links connected to it. */
+            if (get_node_links(this.state.data, id_from).length == 0) {
+                this.on_delete_node(id_from);
+            }
+            if (get_node_links(this.state.data, id_to).length == 0) {
+                this.on_delete_node(id_to);
+            }
+        });
+    }
+
+    on_delete_node(node_id: string) {
+        this.setState((old_state) => {
+            var new_links = Array.from(old_state.data.links);
+            var new_nodes = Array.from(old_state.data.nodes);
+
+            {
+                /* Remove the node */
+                var index = new_nodes.findIndex((node: WOSGraphNode) => (node.id == node_id))!;
+                new_nodes.splice(index, 1);
+
+                /* Remove any links leading to/from it */
+                for (var link of get_node_links(old_state.data, node_id)) {
+                    var index = new_links.indexOf(link);
+                    new_links.splice(index, 1);
+                }
+            }
+
+            return {
+                selected_id: null,
+                data: {
+                    nodes: new_nodes,
+                    links: new_links,
+                }
+            };
         });
     }
 
     static recompute_link_color(data: WOSGraphData, node_id: string) {
-        var links = get_node_links(data, node_id).sort((a, b) => a.index - b.index);
+        var links = get_node_outgoing_links(data, node_id).sort((a, b) => a.index - b.index);
 
         links.forEach((link, i) => {
             // Apply a functiuon so that all but the first link seem *almost* equally weak.
