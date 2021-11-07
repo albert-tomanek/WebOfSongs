@@ -15,7 +15,8 @@ import {
     GraphData as D3GraphData,
 } from "react-d3-graph";
 
-import { SpotifyButton } from './AccountButtons'
+import { AuthButtonSpotify } from './AuthButtonSpotify';
+import { AuthButtonGoogleDrive } from './AuthButtonGoogleDrive';
 import { WOSGraph, WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 import { NodePanel, OrderingElt } from './NodePanel';
 import { WOSNode, get_node, get_node_links, get_node_outgoing_links, get_link } from './Node';
@@ -120,8 +121,8 @@ class App extends React.Component<AppProps, AppState> {
                     />
 	            </div>
                 <div id="icons-container" style={{position: "absolute", right: "12px", top: "12px", display: "flex", flexDirection: "column", gap: "12px"}}>
-                    <SpotifyButton on_aquire_token={this.on_spotify_login.bind(this)}/>
-                    <div className="account-icon" style={{width: "48px", height: "48px"}}/>
+                    <AuthButtonSpotify on_aquire_token={this.on_spotify_login.bind(this)}/>
+                    <AuthButtonGoogleDrive/>
                 </div>
                 <div className="account-icon" style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
                     <img src={Bomb} style={{padding: "7px"}}/>

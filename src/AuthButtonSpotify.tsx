@@ -1,19 +1,19 @@
 import React from 'react';
 
-interface SpotifyButtonProps {
+interface AuthButtonSpotifyProps {
     on_aquire_token?: (token: string) => void;
 }
 
-interface SpotifyButtonState {
+interface AuthButtonSpotifyState {
 	profile_pic_url: string|null;
 	profile_name: string|null;
 	access_token: string|null;
 }
 
-export class SpotifyButton extends React.Component<SpotifyButtonProps, SpotifyButtonState> {
+export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, AuthButtonSpotifyState> {
 	// Account logic taken from: https://github.com/spotify/web-api-auth-examples/blob/master/implicit_grant/public/index.html
 
-	constructor(props: SpotifyButtonProps) {
+	constructor(props: AuthButtonSpotifyProps) {
 		super(props);
 
 		this.state = {
@@ -51,6 +51,16 @@ export class SpotifyButton extends React.Component<SpotifyButtonProps, SpotifyBu
             // Too bad. No token. We've got to wait for the user to log in.
         }
 	}
+
+    signout(): void {
+        this.setState({
+            profile_pic_url: null,
+            profile_name: null,
+            access_token: null,
+        });
+
+        localStorage.setItem('spotify_token_expiry', '0');  // Just pretend the token has expired so that it doesn't get used.
+    }
 
     token_aquired(token: string) {
         if (this.props.on_aquire_token) {
@@ -100,9 +110,9 @@ export class SpotifyButton extends React.Component<SpotifyButtonProps, SpotifyBu
 
 		var url = 'https://accounts.spotify.com/authorize';
 		url += '?response_type=token';
-		url += '&client_id=' + encodeURIComponent(SpotifyButton.CLIENT_ID);
+		url += '&client_id=' + encodeURIComponent(AuthButtonSpotify.CLIENT_ID);
 		url += '&scope=' + encodeURIComponent(scope);
-		url += '&redirect_uri=' + encodeURIComponent(SpotifyButton.REDIRECT_URI);
+		url += '&redirect_uri=' + encodeURIComponent(AuthButtonSpotify.REDIRECT_URI);
 		url += '&state=' + encodeURIComponent(state);
 
 		window.location.assign(url);
