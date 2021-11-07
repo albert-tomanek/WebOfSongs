@@ -24,39 +24,53 @@ export class SpotifyButton extends React.Component<SpotifyButtonProps, SpotifyBu
 	}
 
 	componentDidMount() {
-		var params = getHashParams();
+        var url_params = getHashParams(); // Get params from the URL if we've returned from Spotify's OAuth
+        var token_expiry = parseInt(localStorage.getItem('spotify_token_expiry') ?? '0');     // Expiry time of the cached token
 
-		var storedState: string|null = localStorage.getItem(SpotifyButton.STATE_KEY);
+		if (url_params.access_token) {
+            /* If we've returned from OAuth */
+            // window.history.pushState(null, '', window.location.href);    // Change the url to get rid of the hash params.
+            window.location.assign(window.location.href);   // FIXME: above doesn't work
 
-		if (params.access_token && (params.state == null || params.state !== storedState)) {
-			alert('There was an error during Spotify authentication');
-		} else {
-			localStorage.removeItem(SpotifyButton.STATE_KEY);
+            var storedState: string|null = localStorage.getItem('spotify_auth_state');
 
-			if (params.access_token) {
-				if (this.props.on_aquire_token) {
-					this.props.on_aquire_token(params.access_token);
-				}
+            if ((url_params.state == null || url_params.state !== storedState)) {
+    			alert('There was an error during Spotify authentication');
+    		} else {
+    			localStorage.removeItem('spotify_auth_state');
 
-				// Show the profile pic
-				fetch(
-					'https://api.spotify.com/v1/me',
-					{ headers: { 'Authorization': 'Bearer ' + params.access_token } },
-				).then((response) => {
-					return response.json();
-				}).then((json: any) => {
-					this.setState({
-						profile_pic_url: (json.images.length > 0) ? json.images[0].url : null,
-						profile_name: json.display_name,
-						access_token: params.access_token,
-					});
-				});
-			} else {
-				// $('#login').show();
-				// $('#loggedin').hide();
-			}
-		}
+                localStorage.setItem('spotify_auth_token', url_params.access_token);
+                localStorage.setItem('spotify_token_expiry', (Date.now() + 1000*parseInt(url_params.expires_in)).toString());
+                this.token_aquired(url_params.access_token);
+    		}
+        }
+        else if (Date.now() < token_expiry) {
+            this.token_aquired(localStorage.getItem('spotify_auth_token')!);
+        }
+        else {
+            // Too bad. No token. We've got to wait for the user to log in.
+        }
 	}
+
+    token_aquired(token: string) {
+        if (this.props.on_aquire_token) {
+            this.props.on_aquire_token(token);
+        }
+
+        // Show the profile pic
+        fetch(
+            'https://api.spotify.com/v1/me',
+            { headers: { 'Authorization': 'Bearer ' + token } },
+        ).then((response) => {
+            return response.json();
+        }).then((json: any) => {
+            this.setState({
+                profile_pic_url: (json.images.length > 0) ? json.images[0].url : null,
+                profile_name: json.display_name,
+                access_token: token,
+            });
+        });
+    }
 
 	render() {
 		return (
@@ -75,14 +89,13 @@ export class SpotifyButton extends React.Component<SpotifyButtonProps, SpotifyBu
 		);
 	}
 
-	static STATE_KEY = 'spotify_auth_state';
 	static CLIENT_ID = '1d3d80974a3c4a3a99b6f25c4e7483aa'; // Your client id
 	static REDIRECT_URI = 'http://localhost:3000/'; // Your redirect uri
 
 	goto_login_page(): void {
 		var state = generateRandomString(16);
 
-		localStorage.setItem(SpotifyButton.STATE_KEY, state);
+		localStorage.setItem('spotify_auth_state', state);
 		var scope = 'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing';
 
 		var url = 'https://accounts.spotify.com/authorize';

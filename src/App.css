@@ -69,6 +69,8 @@ body {
     font-family: Roboto;
     font-weight: lighter;
     color: #444;
+
+    user-select: none;
 }
 
 .ordering-elt > .hide {

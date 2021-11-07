@@ -15,6 +15,8 @@ export interface WOSGraphNode extends D3GraphNode {
 
 export interface WOSGraphLink extends D3GraphLink {
 	index: number;
+    // color: string;
+    // is_playlist: bool;
 }
 
 export type WOSGraphData = D3GraphData<WOSGraphNode, WOSGraphLink>;
