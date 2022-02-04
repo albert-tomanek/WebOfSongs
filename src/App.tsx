@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from './logo.svg';
 import DraggableList from 'react-draggable-list';
 
 // https://cnpmjs.org/package/@types/spotify-web-playback-sdk
@@ -26,6 +25,10 @@ import { WOSNode, get_node, get_node_links, get_node_outgoing_links, get_link } 
 
 import Plus from './plus.svg';
 import Bomb from './bomb.svg';
+
+// Uhh we need this to talk with python
+export const eel = window.eel
+eel.set_host('ws://localhost:8080')
 
 var TEST_DATA: WOSGraphData = {       // https://github.com/danielcaldas/react-d3-graph/pull/104
     nodes: [
@@ -132,7 +135,7 @@ class App extends React.Component<AppProps, AppState> {
                 <div id="icons-container" style={{position: "absolute", right: "12px", top: "12px", display: "flex", flexDirection: "column", gap: "12px"}}>
                     <AuthButtonSpotify on_aquire_token={this.on_spotify_login.bind(this)}/>
                 </div>
-                <div className="account-icon" style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
+                <div className="account-icon" onClick={() => {window.eel.py_bomb()()}} style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
                     <img src={Bomb} style={{padding: "7px"}}/>
                 </div>
 			</div>
@@ -147,6 +150,8 @@ class App extends React.Component<AppProps, AppState> {
 
         this.sync_currently_playing();
         setInterval(() => this.sync_currently_playing(), 5000);
+
+        this.load_graph();
     }
 
     sync_currently_playing() {
@@ -337,12 +342,13 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     save_graph(): void {
-        // See if the file already exists
-
+        window.eel.py_write_graph_file("test")();
     }
 
     load_graph(): void {
-
+        window.eel.py_read_graph_file()().then((text: string) => {
+            console.log(text);
+        });
     }
 }
 
