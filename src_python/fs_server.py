@@ -8,12 +8,12 @@ def py_write_graph_file(contents: str):
         f.write(contents)
 
 @eel.expose
-def py_read_graph_file():
+def py_read_graph_file() -> str:
     try:
         with open('graph.json', 'r') as f:
             return f.read()
     except Exception:
-        return None
+        return ''
 
 import time
 @eel.expose
@@ -40,7 +40,7 @@ def start_eel(develop):
         size=(1280, 800),
     )
     try:
-        eel.start(page, mode=app, shutdown_delay=1000, **eel_kwargs)
+        eel.start(page, mode=app, shutdown_delay=1000*1000, **eel_kwargs)
     except EnvironmentError:
         # If Chrome isn't found, fallback to Microsoft Edge on Win10 or greater
         if sys.platform in ['win32', 'win64'] and int(platform.release()) >= 10:

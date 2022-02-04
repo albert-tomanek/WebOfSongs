@@ -68,7 +68,7 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
             // this is only ever a single element list of the one parent container we're observing
             for (let entry of entries) {
                 if (entry.contentRect) {
-                    console.log(entry.contentRect.width, entry.contentRect.height)
+                    // console.log(entry.contentRect.width, entry.contentRect.height)
 
                     this.setState(state => {
                         state.config.width  = "100%";//entry.contentRect.width;

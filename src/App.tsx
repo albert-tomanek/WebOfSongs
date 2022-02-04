@@ -7,7 +7,6 @@ import SpotifyWebApi from 'spotify-web-api-js';
 // @ts-ignore
 import { gapi } from "gapi-script";
 
-
 import {event as currentEvent} from 'd3-selection';
 import './App.css';
 
@@ -72,19 +71,11 @@ class App extends React.Component<AppProps, AppState> {
 		this.state = {
             selected_id: null,
             playing_id: null,
-            data: TEST_DATA,
+            data: { nodes: [], links: [] },
 		};
 	}
 
     componentDidMount() {
-        this.setState(state => {
-            var data = state.data;
-            data.nodes.forEach(node => {
-                App.recompute_link_color(data, node.id);
-            });
-
-            return { data: data };
-        });
     }
 
 	render() {
@@ -116,7 +107,15 @@ class App extends React.Component<AppProps, AppState> {
                                             shadow={1}
                                             action_hide_unless_hover={false}
                                             action_icon_src={Plus}
-                                            action_callback={this.link_to_current.bind(this)}
+                                            action_callback={() => {
+                                                if (this.state.data.nodes.length != 0) {
+                                                    this.link_to_current();
+                                                }
+                                                else {
+                                                    /* If there's no nodes to link to then add it to the graph at least */
+                                                    this.setState({ data: { nodes: [{id: this.state.playing_id!}], links: [] } });
+                                                }
+                                            }}
                                         />
                                     </>
                                 }
@@ -135,7 +134,7 @@ class App extends React.Component<AppProps, AppState> {
                 <div id="icons-container" style={{position: "absolute", right: "12px", top: "12px", display: "flex", flexDirection: "column", gap: "12px"}}>
                     <AuthButtonSpotify on_aquire_token={this.on_spotify_login.bind(this)}/>
                 </div>
-                <div className="account-icon" onClick={() => {window.eel.py_bomb()()}} style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
+                <div className="account-icon" onClick={() => {this.load_graph();}} style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
                     <img src={Bomb} style={{padding: "7px"}}/>
                 </div>
 			</div>
@@ -226,17 +225,26 @@ class App extends React.Component<AppProps, AppState> {
                 /* Create the link if it doesn't exist */
                 if (!get_link(old_data, old_state.selected_id!, old_state.playing_id!)) {
                     var num_links = get_node_outgoing_links(old_data, old_state.selected_id!).length;
-                    new_links = old_data.links.concat([{ source: this.state.selected_id!, target: this.state.playing_id!, index: num_links + 1 }]);
+                    new_links = old_data.links.concat([{
+                        source: this.state.selected_id!,
+                        target: this.state.playing_id!,
+                        index: num_links + 1
+                    }]);
                 }
                 else {
                     new_links = old_data.links;
                 }
 
+                var new_data = {
+                    nodes: new_nodes,
+                    links: new_links,
+                }
+
+                /* Recompute the colours of the links */
+                App.recompute_link_color(new_data, this.state.selected_id!);
+
                 return {
-                    data: {
-                        nodes: new_nodes,
-                        links: new_links,
-                    }
+                    data: new_data,
                 };
             });
         }
@@ -317,7 +325,7 @@ class App extends React.Component<AppProps, AppState> {
         });
     }
 
-    static recompute_link_color(data: WOSGraphData, node_id: string) {
+    static recompute_link_color(/*out*/ data: WOSGraphData, node_id: string) {
         var links = get_node_outgoing_links(data, node_id).sort((a, b) => a.index - b.index);
 
         links.forEach((link, i) => {
@@ -342,12 +350,45 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     save_graph(): void {
-        window.eel.py_write_graph_file("test")();
+        var output: WOSGraphData = {
+            nodes: this.state.data.nodes,
+            links: this.state.data.links.filter(link => true),
+        }
+
+        window.eel.py_write_graph_file(JSON.stringify(output))();
     }
 
     load_graph(): void {
+        console.log('Loading graph');
         window.eel.py_read_graph_file()().then((text: string) => {
-            console.log(text);
+            try {
+                var json: any = JSON.parse(text);
+                if (json.nodes != undefined && json.links != undefined)
+                {
+                    /* Merge the loaded data into whatever is already there (probably nothing) */
+                    this.setState(state => {
+                        return {
+                            data: {
+                                nodes: state.data.nodes.concat(json.nodes),
+                                links: state.data.links.concat(json.links),
+                            }
+                        }
+                    });
+
+                    /* Compute the link colours for each link */
+                    this.setState(state => {
+                        var data = state.data;
+                        data.nodes.forEach(node => {
+                            App.recompute_link_color(data, node.id);
+                        });
+
+                        return { data: data };
+                    });
+                }
+            }
+            catch (e) {
+                alert("Error loading graph from JSON: " + (e as Error).message);
+            }
         });
     }
 }
