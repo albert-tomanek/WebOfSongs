@@ -1,4 +1,3 @@
-// https://github.com/ChrisKnott/Eel/tree/master/examples/07%20-%20CreateReactApp
 import React from 'react';
 import logo from './logo.svg';
 import DraggableList from 'react-draggable-list';
@@ -21,7 +20,6 @@ import {
 } from "react-d3-graph";
 
 import { AuthButtonSpotify } from './AuthButtonSpotify';
-import { AuthButtonGoogleDrive } from './AuthButtonGoogleDrive';
 import { WOSGraph, WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 import { NodePanel, OrderingElt } from './NodePanel';
 import { WOSNode, get_node, get_node_links, get_node_outgoing_links, get_link } from './Node';
@@ -133,7 +131,6 @@ class App extends React.Component<AppProps, AppState> {
 	            </div>
                 <div id="icons-container" style={{position: "absolute", right: "12px", top: "12px", display: "flex", flexDirection: "column", gap: "12px"}}>
                     <AuthButtonSpotify on_aquire_token={this.on_spotify_login.bind(this)}/>
-                    <AuthButtonGoogleDrive on_signed_in={this.on_google_login.bind(this)}/>
                 </div>
                 <div className="account-icon" style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
                     <img src={Bomb} style={{padding: "7px"}}/>
@@ -328,7 +325,7 @@ class App extends React.Component<AppProps, AppState> {
         });
     }
 
-    /* Google Drive-related */
+    /* Saving the graph */
     setup_atexit_code(): void {
         window.addEventListener('beforeunload', e => {
             /* Cancel the event */
@@ -339,55 +336,8 @@ class App extends React.Component<AppProps, AppState> {
         });
     }
 
-    on_google_login(): void {
-        // this.find_drive_file().then(id => {
-        //     console.log('Found file. ID=',id);
-        //     // this.load_graph();
-        // });
-    }
-
-    find_drive_file(): Promise<string> {
-        // Assumes we're logged in to drive
-
-        return new Promise<string>((resolve, reject) => {
-            gapi.client.drive.files.list({
-                q: "name = 'song_graph.json'",
-                fields: 'nextPageToken, files(id, name)',
-                spaces: 'appDataFolder',
-            }).execute(resp => {
-                if (resp.result.files != undefined && resp.result.nextPageToken != null) {
-                    if (resp.result.files.length != 0) {
-                        console.log('File extsts, id is', resp.result.files[0].id!);
-                        resolve(resp.result.files[0].id!);
-                    }
-                }
-
-                // If the file wasn't found, create it.
-                gapi.client.drive.files.create({
-                    fields: 'id',
-                    resource: {
-                        'name': 'song_graph.json',
-                        'parents': ['appDataFolder'],
-                        'mimeType': 'application/json',
-                    },
-                }).execute(resp => {
-                    console.log("File wasn't found. Created ", resp.result.id!);
-                    resolve(resp.result.id!);
-                });
-
-                reject("Error interacting with Drive");
-            });
-        });
-    }
-
     save_graph(): void {
         // See if the file already exists
-
-        var save_cb = (id: string) => {
-            // Saves the state to the google drive id
-
-        }
-
 
     }
 
