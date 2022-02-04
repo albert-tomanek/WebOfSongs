@@ -13,6 +13,9 @@ interface AuthButtonSpotifyState {
 export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, AuthButtonSpotifyState> {
 	// Account logic taken from: https://github.com/spotify/web-api-auth-examples/blob/master/implicit_grant/public/index.html
 
+    static CLIENT_ID = '1d3d80974a3c4a3a99b6f25c4e7483aa'; // Your client id
+    static REDIRECT_URI = 'http://localhost:3000/'; // Your redirect uri
+
 	constructor(props: AuthButtonSpotifyProps) {
 		super(props);
 
@@ -52,16 +55,6 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
         }
 	}
 
-    signout(): void {
-        this.setState({
-            profile_pic_url: null,
-            profile_name: null,
-            access_token: null,
-        });
-
-        localStorage.setItem('spotify_token_expiry', '0');  // Just pretend the token has expired so that it doesn't get used.
-    }
-
     token_aquired(token: string) {
         if (this.props.on_aquire_token) {
             this.props.on_aquire_token(token);
@@ -92,15 +85,21 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
 						: 'white',
 					backgroundSize: "contain",
 				}}
-				onClick={this.goto_login_page.bind(this)}
+				onClick={this.on_click.bind(this)}
 			>
 				{ (this.state.access_token && !this.state.profile_pic_url) && this.state.profile_name }
 			</div>
 		);
 	}
 
-	static CLIENT_ID = '1d3d80974a3c4a3a99b6f25c4e7483aa'; // Your client id
-	static REDIRECT_URI = 'http://localhost:3000/'; // Your redirect uri
+    on_click(): void {
+        if (this.state.access_token == null) {
+            this.goto_login_page();
+        }
+        else {
+            this.signout();
+        }
+    }
 
 	goto_login_page(): void {
 		var state = generateRandomString(16);
@@ -117,6 +116,16 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
 
 		window.location.assign(url);
 	}
+
+    signout(): void {
+        this.setState({
+            profile_pic_url: null,
+            profile_name: null,
+            access_token: null,
+        });
+
+        localStorage.setItem('spotify_token_expiry', '0');  // Just pretend the token has expired so that it doesn't get used.
+    }
 }
 
 function getHashParams() {

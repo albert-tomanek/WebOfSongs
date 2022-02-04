@@ -4,13 +4,12 @@ import React from 'react';
 import { gapi } from "gapi-script";
 
 interface AuthButtonGoogleDriveProps {
-    on_aquire_token?: (token: string) => void;
+    on_signed_in?: () => void;
 }
 
 interface AuthButtonGoogleDriveState {
 	profile_pic_url: string|null;
 	profile_name: string|null;
-	access_token: string|null;
 }
 
 export class AuthButtonGoogleDrive extends React.Component<AuthButtonGoogleDriveProps, AuthButtonGoogleDriveState> {
@@ -30,7 +29,6 @@ export class AuthButtonGoogleDrive extends React.Component<AuthButtonGoogleDrive
 		this.state = {
 			profile_pic_url: null,
 			profile_name: null,
-			access_token: null,
 		};
 	}
 
@@ -42,32 +40,32 @@ export class AuthButtonGoogleDrive extends React.Component<AuthButtonGoogleDrive
 
     init_gapi() {
         if (! AuthButtonGoogleDrive.client_initialized) {
-            gapi.load('client:auth2', () => {
+            console.log('client not initialized')
+            gapi.load('client:auth2:drive', () => {
                 gapi.client.init({
                     // apiKey: AuthButtonGoogleDrive.API_KEY,
                     // clientId: AuthButtonGoogleDrive.CLIENT_ID,
                     discoveryDocs: AuthButtonGoogleDrive.DISCOVERY_DOCS,
                     // scope: AuthButtonGoogleDrive.SCOPES
                 }).then(() => {
+                    console.log('initialized client')
                     gapi.auth2.init({
                         client_id: AuthButtonGoogleDrive.CLIENT_ID,
                         scope: AuthButtonGoogleDrive.SCOPES,
                         ux_mode: "popup",
                     }).then(
                         (google_auth) => {
+                            console.log('initialized oauth')
                             // Listen for sign-in state changes.
                             google_auth.currentUser.listen((user) => this.on_current_user_changed(user));
-                            google_auth.isSignedIn.listen((b)=>console.log(`isSignedIn listener: ${b}`));
-                            // setInterval(() => console.log(`isSignedIn `+this.google_auth!.isSignedIn.get().toString()), 5000);
 
                             this.google_auth = google_auth;
                         }, ({error, details }) => {
                             alert('Error initializing Google OAuth2:\n' + error + '\n' + details);
                         }
                     );
-
-                    }, (error) => {
-                    alert('Error initializing Google API client:\n' + JSON.stringify(error, null, 4));
+                }, (error) => {
+                    alert('Error initializing Google client API:\n' + JSON.stringify(error, null, 4));
                 });
             });
 
@@ -94,7 +92,12 @@ export class AuthButtonGoogleDrive extends React.Component<AuthButtonGoogleDrive
 
     on_click() {
         if (this.google_auth) {
-            Promise.resolve(this.google_auth.signIn()).then(u=>console.log('done!',u));
+            if (this.google_auth.isSignedIn.get()== false) {
+                this.google_auth.signIn();
+            }
+            else {
+                this.google_auth.signOut();
+            }
         }
         else {
             console.error("No GoogleAuth instance; can't log in.");
@@ -110,6 +113,10 @@ export class AuthButtonGoogleDrive extends React.Component<AuthButtonGoogleDrive
                 profile_name: profile.getName(),
                 profile_pic_url: profile.getImageUrl(),
             });
+
+            if (this.props.on_signed_in) {
+                this.props.on_signed_in();
+            }
         }
         else {
             this.setState({

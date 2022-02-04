@@ -1,9 +1,14 @@
+// https://github.com/ChrisKnott/Eel/tree/master/examples/07%20-%20CreateReactApp
 import React from 'react';
 import logo from './logo.svg';
 import DraggableList from 'react-draggable-list';
 
 // https://cnpmjs.org/package/@types/spotify-web-playback-sdk
 import SpotifyWebApi from 'spotify-web-api-js';
+
+// @ts-ignore
+import { gapi } from "gapi-script";
+
 
 import {event as currentEvent} from 'd3-selection';
 import './App.css';
@@ -54,8 +59,14 @@ interface AppState {
 class App extends React.Component<AppProps, AppState> {
     static spotify = new SpotifyWebApi();
 
+    save_file_id: string|null;  // The ID of the file we're saving to in Google Drive. It's not in State because changing this does not require a re-render from React's side.
+
     constructor(props: AppProps) {
 		super(props);
+
+        // Google drive stuff
+        this.setup_atexit_code();
+        this.save_file_id = null;
 
 		this.state = {
             selected_id: null,
@@ -122,7 +133,7 @@ class App extends React.Component<AppProps, AppState> {
 	            </div>
                 <div id="icons-container" style={{position: "absolute", right: "12px", top: "12px", display: "flex", flexDirection: "column", gap: "12px"}}>
                     <AuthButtonSpotify on_aquire_token={this.on_spotify_login.bind(this)}/>
-                    <AuthButtonGoogleDrive/>
+                    <AuthButtonGoogleDrive on_signed_in={this.on_google_login.bind(this)}/>
                 </div>
                 <div className="account-icon" style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
                     <img src={Bomb} style={{padding: "7px"}}/>
@@ -315,6 +326,73 @@ class App extends React.Component<AppProps, AppState> {
 
             link.color = `hsl(0, 0%, ${(1-strength)*100}%)`;
         });
+    }
+
+    /* Google Drive-related */
+    setup_atexit_code(): void {
+        window.addEventListener('beforeunload', e => {
+            /* Cancel the event */
+            e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
+            e.returnValue = ''; // Chrome requires returnValue to be set
+
+            this.save_graph();
+        });
+    }
+
+    on_google_login(): void {
+        // this.find_drive_file().then(id => {
+        //     console.log('Found file. ID=',id);
+        //     // this.load_graph();
+        // });
+    }
+
+    find_drive_file(): Promise<string> {
+        // Assumes we're logged in to drive
+
+        return new Promise<string>((resolve, reject) => {
+            gapi.client.drive.files.list({
+                q: "name = 'song_graph.json'",
+                fields: 'nextPageToken, files(id, name)',
+                spaces: 'appDataFolder',
+            }).execute(resp => {
+                if (resp.result.files != undefined && resp.result.nextPageToken != null) {
+                    if (resp.result.files.length != 0) {
+                        console.log('File extsts, id is', resp.result.files[0].id!);
+                        resolve(resp.result.files[0].id!);
+                    }
+                }
+
+                // If the file wasn't found, create it.
+                gapi.client.drive.files.create({
+                    fields: 'id',
+                    resource: {
+                        'name': 'song_graph.json',
+                        'parents': ['appDataFolder'],
+                        'mimeType': 'application/json',
+                    },
+                }).execute(resp => {
+                    console.log("File wasn't found. Created ", resp.result.id!);
+                    resolve(resp.result.id!);
+                });
+
+                reject("Error interacting with Drive");
+            });
+        });
+    }
+
+    save_graph(): void {
+        // See if the file already exists
+
+        var save_cb = (id: string) => {
+            // Saves the state to the google drive id
+
+        }
+
+
+    }
+
+    load_graph(): void {
+
     }
 }
 
