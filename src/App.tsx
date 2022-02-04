@@ -29,21 +29,6 @@ import Bomb from './bomb.svg';
 export const eel = window.eel
 eel.set_host('ws://localhost:8080')
 
-var TEST_DATA: WOSGraphData = {       // https://github.com/danielcaldas/react-d3-graph/pull/104
-    nodes: [
-        { id: "spotify:track:16g1GYkl4ogjX8UxsrRGHM"},
-        { id: "spotify:track:2lpApUodMauXt8yzMeQtOB"},
-        { id: "spotify:track:0bqjS54zmDlYanW8mlx28k"},
-        { id: "spotify:track:2tjNv48TztwpNJZV8DKssQ"}
-    ],
-    links: [
-        { source: "spotify:track:16g1GYkl4ogjX8UxsrRGHM", index: 2, target: "spotify:track:2lpApUodMauXt8yzMeQtOB" },
-        { source: "spotify:track:16g1GYkl4ogjX8UxsrRGHM", index: 1, target: "spotify:track:0bqjS54zmDlYanW8mlx28k" },
-        { source: "spotify:track:16g1GYkl4ogjX8UxsrRGHM", index: 3, target: "spotify:track:2tjNv48TztwpNJZV8DKssQ" },
-        { source: "spotify:track:2tjNv48TztwpNJZV8DKssQ", index: 1, target: "spotify:track:0bqjS54zmDlYanW8mlx28k" },
-    ],
-};
-
 /* App */
 
 interface AppProps {
@@ -352,10 +337,22 @@ class App extends React.Component<AppProps, AppState> {
     save_graph(): void {
         var output: WOSGraphData = {
             nodes: this.state.data.nodes,
-            links: this.state.data.links.filter(link => true),
+            links: App.keep_properties(this.state.data.links as any, ['source', 'target', 'index']) as [WOSGraphLink],
         }
 
         window.eel.py_write_graph_file(JSON.stringify(output))();
+    }
+
+    static keep_properties(list: any[], propnames: string[]): any[] {
+        return list.map((item: {[index: string]:any}) => {
+            // https://stackoverflow.com/questions/38750705/filter-object-properties-by-key-in-es6#38750895
+            return Object.keys(item)
+                .filter(key => propnames.includes(key))
+                .reduce((obj: {[index: string]:any}, key: string) => {
+                    obj[key] = item[key];
+                    return obj;
+                }, {});
+        });
     }
 
     load_graph(): void {

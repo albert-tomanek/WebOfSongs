@@ -87,18 +87,6 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 	}
 }
 
-// {/* <div>
-//     <form>
-//         <textarea
-//             id="note-textarea"
-//             style=
-//             value={this.state.note}
-//             onChange={(e) => { this.setState({ note: e.target.value }); }}
-//             onBlur={this.on_leave_textarea.bind(this)}   // https://stackoverflow.com/questions/37609049/how-to-correctly-catch-change-focusout-event-on-text-input-in-react-js
-//         />
-//     </form>
-// </div> */}
-
 /* List Template */
 
 interface OrderingEltProps extends WOSNodeProps {

@@ -7,10 +7,12 @@ import {
 	GraphLink as D3GraphLink,
 } from "react-d3-graph";
 
-import { WOSNode } from './Node';
+import { WOSNode, get_node } from './Node';
 
 export interface WOSGraphNode extends D3GraphNode {
     note?: string;
+    x?: number;  // The d.ts file doesn't include these for some reason but react-d3-graph does accept them
+    y?: number;
 }
 
 export interface WOSGraphLink extends D3GraphLink {
@@ -39,7 +41,7 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
             width: 200,
             height: 200,
             directed: true,
-            staticGraphWithDragAndDrop: true,
+            staticGraphWithDragAndDrop: true,    // https://github.com/danielcaldas/react-d3-graph/blob/b566a95a205ef65cdef8a6df274d712ef91c3ab3/src/components/graph/Graph.jsx#L516
             nodeHighlightBehavior: true,
             node: {
                 color: "lightgreen",
@@ -93,6 +95,13 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
         console.log('click link ' + from_id + ',' + to_id);
     }
 
+    on_node_position_change(id: string, x: number, y: number)
+    {
+        var node = get_node(this.props.data as WOSGraphData, id)!;
+        node.x = x;
+        node.y = y;
+    }
+
     render() {
         return (
             <div className="my-graph-container" style={{flexGrow: 1}} ref={this.r_container} >
@@ -102,6 +111,7 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
                 config={this.state.config}
                 onClickLink={this.on_click_link.bind(this)}
                 onClickGraph={() => this.props.cb_focus_node ? this.props.cb_focus_node(null) : null}
+                onNodePositionChange={this.on_node_position_change.bind(this)}
                 />
             </div>
         );
