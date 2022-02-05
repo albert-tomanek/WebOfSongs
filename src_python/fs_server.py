@@ -1,19 +1,20 @@
 # https://github.com/ChrisKnott/Eel/tree/master/examples/07%20-%20CreateReactApp
 
 import eel
+import time, glob
 
 @eel.expose
 def py_write_graph_file(contents: str):
-    with open('graph.json', 'w+') as f:
+    with open(f'graph.{time.time()}.json', 'w+') as f:
         f.write(contents)
 
 @eel.expose
 def py_read_graph_file() -> str:
     try:
-        with open('graph.json', 'r') as f:
+        with open(sorted(glob.glob('./graph.*.json'), reverse=True)[0], 'r') as f:  # Open the latest save
             return f.read()
     except Exception:
-        return ''
+        return ""
 
 import time
 @eel.expose
