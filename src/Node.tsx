@@ -5,12 +5,18 @@ import App from './App';
 import { WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 
 export interface WOSNodeProps {
+	/* The node component doesn't do any actual logic.
+	 * It just displays itself in the way specified by the folowing parameters.	*/
+
 	node: WOSGraphNode;
 	shadow?: number;		/* [0,1] */
 	dragHandleProps?: any;
 
 	cb_focus_node?: (id: string) => void;
 	cb_play_node?:  (id: string) => void;
+
+	is_focused: boolean;
+	is_playing: boolean;
 }
 
 interface WOSNodeState {
@@ -47,10 +53,11 @@ export class WOSNode extends React.Component<WOSNodeProps, WOSNodeState> {
 	render() {
 		var p = this.props;
 	    return (
-	        <div className="song-node" style={{display: "flex", flexDirection: "row", filter: `drop-shadow(1px 4px 8px rgba(0, 0, 0, ${(p.shadow??0)*0.30}))`}} {...p.dragHandleProps}>
+	        <div className={p.is_focused ? "song-node selected" : "song-node"} style={{display: "flex", flexDirection: "row", filter: `drop-shadow(1px 4px 8px rgba(0, 0, 0, ${(p.shadow??0)*0.30}))`}} {...p.dragHandleProps}>
 	            <div className="song-node-img" style={{flexShrink: 0, width: "65px", height: "65px", backgroundImage: `url(${this.state.cover_url ?? ""})`, backgroundSize: 'cover'}}>
 					<svg width="65" height="65" xmlns="http://www.w3.org/2000/svg"
 						onClick={() => { if (p.cb_play_node) {p.cb_play_node(p.node.id)}}}
+						className={p.is_playing == false ? "hover-play" : ""}
 					>
 						<path transform="rotate(90, 34.1061, 32.7)" d="m21.81981,42.68264l12.2863,-19.96524l12.2863,19.96524l-24.5726,0l0.00001,0z" stroke="black" fill="white" strokeWidth="2"/>
 					</svg>

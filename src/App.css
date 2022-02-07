@@ -100,6 +100,10 @@ body {
     /* filter: drop-shadow(1px 4px 8px rgba(0, 0, 0, 0.49)); */
 }
 
+.song-node.selected {
+    border-color: #79DBF9;
+}
+
 .song-node .title {
     font-family: Roboto;
     font-style: normal;
@@ -130,10 +134,10 @@ body {
     background-color: #8E8E8E;
 }
 
-.song-node-img > svg {
+.song-node-img > .hover-play {
     display: none;
 }
 
-.song-node-img:hover > svg {
+.song-node-img:hover > .hover-play {
     display: block;
 }

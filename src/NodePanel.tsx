@@ -11,7 +11,8 @@ import Bin from './bin.svg';
 
 interface NodePanelProps {
     data: WOSGraphData;
-    node_id: string;
+    selected_id: string | null;
+    playing_id: string | null;
     cb_reorder: (ids: string[]) => void;
     cb_delete_link: (id_from: string, id_to: string) => void;
     cb_play_node?: (id: string) => void;
@@ -33,15 +34,17 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 	}
 
     componentDidMount() {
-        this.setState({
-            list: get_node_outgoing_links(this.props.data, this.props.node_id).sort((a, b) => a.index - b.index).map(link => get_node(this.props.data, link.target)!),
-        });
-
-        App.spotify.getTrack(this.props.node_id.split(':')[2]).then((json) => {
+        if (this.props.selected_id != null) {
             this.setState({
-                title: json.name,
+                list: get_node_outgoing_links(this.props.data, this.props.selected_id).sort((a, b) => a.index - b.index).map(link => get_node(this.props.data, link.target)!),
             });
-        });
+
+            App.spotify.getTrack(this.props.selected_id.split(':')[2]).then((json) => {
+                this.setState({
+                    title: json.name,
+                });
+            });
+        }
     }
 
     componentDidUpdate(old_props: NodePanelProps) {     // This is apparently bad?  https://www.freecodecamp.org/news/get-pro-with-react-setstate-in-10-minutes-d38251d1c781/#third-approach
@@ -57,33 +60,37 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
     }
 
 	render() {
-		return (
-			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", height: "100%", padding: "24px"}}>
-				<h1 style={{display: "flex", justifyContent: "left"}}>{this.state.title ?? "░░░░░░░"}</h1>
-                <DraggableList<WOSGraphNode, any, ListTemplate>
-                    list={this.state.list}
-                    itemKey="id"
-                    template={ListTemplate}
-                    onMoveEnd={this.on_list_update.bind(this)}
-                    constrainDrag={true}
-                    springConfig={{stiffness: 600, damping: 35}}
-                    commonProps={{
-                        list: this.state.list,  // so that each instance can find out what its index in the list is
-                        delete_link_with: (id: string) => this.props.cb_delete_link(this.props.node_id, id),  // to call when the delete button is pressed.
-                        cb_play_node: this.props.cb_play_node,
-                    }}
-                />
-                <div style={{flexGrow: 1}} />
-                <Textarea
-                    defaultValue={get_node(this.props.data, this.props.node_id)!.note ?? ""}
-                    id="note-textarea"
-                    maxLength={3000}
-                    onChange={()=>{}}
-                    placeholder="Note…"
-                    onBlur={(e) => { get_node(this.props.data, this.props.node_id)!.note = e.target.value; }}
-                />
-			</div>
-		);
+        if (this.props.selected_id != null)
+        {
+    		return (
+    			<div style={{display: "flex", flexDirection: "column", alignItems: "stretch", height: "100%", padding: "24px"}}>
+    				<h1 style={{display: "flex", justifyContent: "left"}}>{this.state.title ?? "░░░░░░░"}</h1>
+                    <DraggableList<WOSGraphNode, any, ListTemplate>
+                        list={this.state.list}
+                        itemKey="id"
+                        template={ListTemplate}
+                        onMoveEnd={this.on_list_update.bind(this)}
+                        constrainDrag={true}
+                        springConfig={{stiffness: 600, damping: 35}}
+                        commonProps={{
+                            list: this.state.list,  // so that each instance can find out what its index in the list is
+                            delete_link_with: (id: string) => this.props.cb_delete_link(this.props.selected_id!, id),  // to call when the delete button is pressed.
+                            cb_play_node: this.props.cb_play_node,
+                            playing_id: this.props.playing_id,
+                        }}
+                    />
+                    <div style={{flexGrow: 1}} />
+                    <Textarea
+                        defaultValue={get_node(this.props.data, this.props.selected_id)!.note ?? ""}
+                        id="note-textarea"
+                        maxLength={3000}
+                        onChange={()=>{}}
+                        placeholder="Note…"
+                        onBlur={(e) => { get_node(this.props.data, this.props.selected_id!)!.note = e.target.value; }}
+                    />
+    			</div>
+    		);
+        }
 	}
 }
 
@@ -94,7 +101,7 @@ interface OrderingEltProps extends WOSNodeProps {
     index?: number,
     action_icon_src: string;
     action_callback: (id: string) => void;
-    action_hide_unless_hover: boolean;
+    action_hide_unless_hover: boolean;  // Hide the bin/plus/whatever unless the mouse is hovering over the elt
 }
 
 export const OrderingElt: React.FC<OrderingEltProps> = (p) => {
@@ -108,6 +115,8 @@ export const OrderingElt: React.FC<OrderingEltProps> = (p) => {
                 dragHandleProps={p.dragHandleProps}
                 shadow={p.shadow}
                 cb_play_node={p.cb_play_node}
+                is_focused={false}
+                is_playing={p.is_playing}
             />
             <img className={p.action_hide_unless_hover ? "hide" : ""} style={{padding: "6px 4px", borderRadius: "4px"}} src={p.action_icon_src} width="24px" height="24px"
                 onClick={() => p.action_callback(p.node.id)}
@@ -123,6 +132,8 @@ class ListTemplate extends React.Component<any, any> {
                 node={this.props.item}
                 key={this.props.itemKey}
                 index={1 + this.props.commonProps.list.findIndex((node: WOSGraphNode) => node.id == this.props.item.id)}
+                is_focused={false}
+                is_playing={this.props.item.id == this.props.commonProps.playing_id}
                 shadow={this.props.itemSelected}
                 dragHandleProps={this.props.dragHandleProps}
                 cb_play_node={this.props.commonProps.cb_play_node}

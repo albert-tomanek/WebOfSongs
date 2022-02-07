@@ -28,6 +28,9 @@ export type WOSGraphData = D3GraphData<WOSGraphNode, WOSGraphLink>;
 interface WOSGraphProps extends D3GraphProps<WOSGraphNode, D3GraphLink> {
     cb_focus_node?: (id: string|null) => void,
     cb_play_node?:  (id: string) => void;
+
+    selected_id: string|null;
+    playing_id: string|null;
 }
 
 export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
@@ -53,6 +56,8 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
                         node: node,
                         cb_focus_node: this.props.cb_focus_node,
                         cb_play_node:  this.props.cb_play_node,
+                        is_focused: node.id == this.props.selected_id,
+                        is_playing: node.id == this.props.playing_id,
                     }, null)
                 },
             },

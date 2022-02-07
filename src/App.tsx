@@ -72,7 +72,8 @@ class App extends React.Component<AppProps, AppState> {
                             { this.state.selected_id ?
                                 <NodePanel
                                     data={this.state.data}
-                                    node_id={this.state.selected_id}
+                                    selected_id={this.state.selected_id}
+                                    playing_id={this.state.playing_id}
 
                                     cb_reorder={this.on_links_reorder.bind(this)}
                                     cb_delete_link={this.on_delete_link.bind(this)}
@@ -93,6 +94,8 @@ class App extends React.Component<AppProps, AppState> {
                                             action_hide_unless_hover={false}
                                             action_icon_src={Plus}
                                             action_callback={() => {this.link_to_current();}}
+                                            is_focused={false}
+                                            is_playing={true}
                                         />
                                     </>
                                 }
@@ -104,6 +107,8 @@ class App extends React.Component<AppProps, AppState> {
                     </div>
                     <WOSGraph id="song-graph"
                         data={this.state.data}
+                        selected_id={this.state.selected_id}
+                        playing_id={this.state.playing_id}
                         cb_focus_node={(id: string|null) => {this.setState((state, props) => ({selected_id: id}))}}      // https://medium.com/ableneo/react-setstate-does-not-immediately-update-the-state-84dbd26f67d5
                         cb_play_node={this.on_play_node.bind(this)}
                     />
