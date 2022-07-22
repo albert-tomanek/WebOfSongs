@@ -5,7 +5,7 @@ import DraggableList from "react-draggable-list";
 import App from './App';
 import Textarea from 'react-expanding-textarea';
 import { WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
-import { WOSNode, WOSNodeProps, get_node, get_node_outgoing_links } from './Node';
+import { WOSNode, WOSNodeProps, get_node, get_node_links, get_link_index_on, set_link_index_on, get_neigbour_id } from './Node';
 
 import Bin from './bin.svg';
 
@@ -36,7 +36,9 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
     componentDidMount() {
         if (this.props.selected_id != null) {
             this.setState({
-                list: get_node_outgoing_links(this.props.data, this.props.selected_id).sort((a, b) => a.index - b.index).map(link => get_node(this.props.data, link.target)!),
+                list: get_node_links(this.props.data, this.props.selected_id)   // May be both outgoing and incoming links -- WOS doesn't distinguish between the two so the utilized functions account for both cases
+                    .sort((link_a, link_b) => get_link_index_on(link_a, this.props.selected_id!) - get_link_index_on(link_b, this.props.selected_id!))
+                    .map(link => get_node(this.props.data, get_neigbour_id(link, this.props.selected_id!)!)!)
             });
 
             App.spotify.getTrack(this.props.selected_id.split(':')[2]).then((json) => {

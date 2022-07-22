@@ -21,7 +21,7 @@ import {
 import { AuthButtonSpotify } from './AuthButtonSpotify';
 import { WOSGraph, WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 import { NodePanel, OrderingElt } from './NodePanel';
-import { WOSNode, get_node, get_node_links, get_node_outgoing_links, get_link } from './Node';
+import { WOSNode, get_node, get_node_links, get_link, get_link_index_on, set_link_index_on, get_neigbour_id } from './Node';
 
 import Plus from './plus.svg';
 import Bomb from './bomb.svg';
@@ -215,11 +215,14 @@ class App extends React.Component<AppProps, AppState> {
 
                     /* Create the link if it doesn't exist */
                     if (!get_link(old_data, old_state.selected_id!, old_state.playing_id!)) {
-                        var num_links = get_node_outgoing_links(old_data, old_state.selected_id!).length;
+                        var src_links = get_node_links(old_data, old_state.selected_id!).length;
+                        var dst_links = get_node_links(old_data, old_state.playing_id!).length;
+
                         new_links = old_data.links.concat([{
                             source: this.state.selected_id!,
                             target: this.state.playing_id!,
-                            index: num_links + 1,
+                            index_src: src_links + 1,       // Make it the weakest link on both ends
+                            index_dst: dst_links + 1,
                             ctime: (new Date()).getTime(),
                         }]);
                     }
@@ -261,12 +264,7 @@ class App extends React.Component<AppProps, AppState> {
             var data = old_state.data;
 
             target_ids.forEach((target_id, i) => {
-                var link: WOSGraphLink = get_link(
-                    data,
-                    old_state.selected_id!, // If the links were reordered then there's gotta be sth selected
-                    target_id
-                )!;
-                link.index = i;
+                set_link_index_on(data, target_id, old_state.selected_id!, i);
             });
 
             App.recompute_link_color(data, old_state.selected_id!);
@@ -330,16 +328,27 @@ class App extends React.Component<AppProps, AppState> {
         });
     }
 
+    static link_colour(frac: number): string {
+        // `frac` is the [0-1] placement of the link out of the total number of links
+
+        var MIN = 0.15;
+        frac = 1/((1-1/MIN)*(1-frac) + (1/MIN));
+
+        return `hsl(0, 0%, ${(frac)*100}%)`;
+    }
+
     static recompute_link_color(/*out*/ data: WOSGraphData, node_id: string) {
-        var links = get_node_outgoing_links(data, node_id).sort((a, b) => a.index - b.index);
+        var links: WOSGraphLink[] = get_node_links(data, node_id)
+        .sort((link_a, link_b) => get_link_index_on(link_a, node_id) - get_link_index_on(link_b, node_id));
 
         links.forEach((link, i) => {
             // Apply a functiuon so that all but the first link seem *almost* equally weak.
-            var strength = 1 - (i / links.length);
-            var MIN = 0.15;
-            strength = 1/((1-1/MIN)*strength + (1/MIN));
 
-            link.color = `hsl(0, 0%, ${(1-strength)*100}%)`;
+            var link_frac_here  = i / links.length;
+            var link_frac_there = get_link_index_on(link, get_neigbour_id(link, node_id)!) / get_node_links(data, get_neigbour_id(link, node_id)!).length;
+            
+            // Although actually the colour needs to represent the link's priority on *both* the songs it connects, so we average between the two fractions.
+            link.color = App.link_colour((link_frac_here + link_frac_there) / 2);
         });
     }
 
@@ -359,7 +368,7 @@ class App extends React.Component<AppProps, AppState> {
     save_graph(): void {
         var output: WOSGraphData = {
             nodes: this.state.data.nodes,
-            links: App.keep_properties(this.state.data.links as any, ['source', 'target', 'index', 'ctime']) as [WOSGraphLink],
+            links: App.keep_properties(this.state.data.links as any, ['source', 'index_src', 'target', 'index_dst', 'ctime']) as [WOSGraphLink],
         }
 
         window.eel.py_write_graph_file(JSON.stringify(output))();

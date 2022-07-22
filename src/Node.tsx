@@ -81,8 +81,19 @@ export class WOSNode extends React.Component<WOSNodeProps, WOSNodeState> {
 	}
 }
 
+// Get a the node with the given ID
 export function get_node(data: WOSGraphData, node_id: string): WOSGraphNode|null {
 	return data.nodes.find((node: WOSGraphNode) => node.id === node_id) ?? null;
+}
+
+// Get the ID of the node at the other end of this link. We don't know what direction the link is going in.
+export function get_neigbour_id(link: WOSGraphLink, this_id: string): string|null {
+	if (link.source == this_id)
+		return link.target;
+	else if (link.target == this_id)
+		return link.source;
+	else
+		return null;
 }
 
 export function get_node_outgoing_links(data: WOSGraphData, node_id: string): WOSGraphLink[] {
@@ -95,4 +106,32 @@ export function get_node_links(data: WOSGraphData, node_id: string): WOSGraphLin
 
 export function get_link(data: WOSGraphData, id_from: string, id_to: string): WOSGraphLink|null {
     return data.links.find((link: WOSGraphLink) => (link.source === id_from) && (link.target === id_to)) ?? null;
+}
+
+// These functions get/set the index of the link on _whichever_ end is on the node in quesiton
+export function get_link_index_on(link: WOSGraphLink, id_to: string): number {
+	if (link.target == id_to)
+		return link.index_dst;
+	else if (link.source == id_to)
+		return link.index_src;
+	else
+		return 0;
+}
+
+export function set_link_index_on(data: WOSGraphData, id_a: string, id_b: string, index_b: number) {
+	let link = data.links.find((link: WOSGraphLink) => 
+		((link.source == id_a) && (link.target == id_b)) ||
+		((link.source == id_b) && (link.target == id_a))
+	)!;
+
+	if (link.target == id_b)
+	{
+		link.index_dst = index_b;
+		console.log("dst", index_b);
+	}
+	else if (link.source == id_b)
+	{
+		link.index_src = index_b;
+		console.log("src", index_b);
+	}
 }
