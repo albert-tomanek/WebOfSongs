@@ -13,12 +13,14 @@ export interface WOSGraphNode extends D3GraphNode {
     note?: string;
     x: number;  // The d.ts file doesn't include these for some reason but react-d3-graph does accept them
     y: number;
+    ctime?: number;
 }
 
 export interface WOSGraphLink extends D3GraphLink {
 	index: number;
     // color: string;
     // is_playlist: bool;
+    ctime?: number;
 }
 
 export type WOSGraphData = D3GraphData<WOSGraphNode, WOSGraphLink>;

@@ -76,21 +76,28 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
     }
 
 	render() {
-		return (
-			<div className="account-icon"
-				style={{
-					width: "48px", height: "48px",
-					backgroundImage: this.state.profile_pic_url
-						? `url(${this.state.profile_pic_url})`
-						: 'white',
-					backgroundSize: "contain",
-				}}
-				onClick={this.on_click.bind(this)}
-			>
-				{ (this.state.access_token && !this.state.profile_pic_url) && this.state.profile_name }
-			</div>
-		);
-	}
+		// return (
+		// 	<div className="account-icon"
+		// 		style={{
+		// 			width: "48px", height: "48px",
+		// 			backgroundImage: this.state.profile_pic_url
+		// 				? `url(${this.state.profile_pic_url})`
+		// 				: 'white',
+		// 			backgroundSize: "contain",
+		// 		}}
+		// 		onClick={this.on_click.bind(this)}
+		// 	>
+		// 		{ (this.state.access_token && !this.state.profile_pic_url) && this.state.profile_name }
+		// 	</div>
+		// );
+
+        return (
+            <a
+                onClick={this.on_click.bind(this)}
+                style={{color: "blue", textDecoration: "underline", cursor: "pointer"}}
+            >Sign in to Spotify</a>
+        );
+    }
 
     on_click(): void {
         if (this.state.access_token == null) {

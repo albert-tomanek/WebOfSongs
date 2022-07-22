@@ -53,5 +53,6 @@ def start_eel(develop):
 if __name__ == '__main__':
     import sys
 
-    # Pass any second argument to enable debugging
-    start_eel(develop=('--devel' in sys.argv))
+    while True:
+        # Pass any second argument to enable debugging
+        start_eel(develop=('--devel' in sys.argv))

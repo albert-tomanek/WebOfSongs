@@ -4,6 +4,7 @@ import DraggableList from 'react-draggable-list';
 // https://cnpmjs.org/package/@types/spotify-web-playback-sdk
 import SpotifyWebApi from 'spotify-web-api-js';
 
+// TODO: Replace with https://github.com/adrianbota/gdrive-appdata
 // @ts-ignore
 import { gapi } from "gapi-script";
 
@@ -84,23 +85,30 @@ class App extends React.Component<AppProps, AppState> {
                             }
 
                             <div id="now-playing" style={{padding: "16px"}}>
-                                { this.state.playing_id &&
+                                { App.spotify.getAccessToken() && 
                                     <>
-                                        <div style={{paddingBottom: "16px"}}>Now playing:</div>
-                                        <OrderingElt
-                                            node={{id: this.state.playing_id, x:0,y:0}}
-                                            index={1}
-                                            shadow={1}
-                                            action_hide_unless_hover={false}
-                                            action_icon_src={Plus}
-                                            action_callback={() => {this.link_to_current();}}
-                                            is_focused={false}
-                                            is_playing={true}
-                                        />
+                                        { this.state.playing_id &&
+                                            <>
+                                                <div style={{paddingBottom: "16px"}}>Now playing:</div>
+                                                <OrderingElt
+                                                    node={{id: this.state.playing_id, x:0,y:0}}
+                                                    index={1}
+                                                    shadow={1}
+                                                    action_hide_unless_hover={false}
+                                                    action_icon_src={Plus}
+                                                    action_callback={() => {this.link_to_current();}}
+                                                    is_focused={false}
+                                                    is_playing={true}
+                                                />
+                                            </>
+                                        }
+                                        { !this.state.playing_id &&
+                                            <i>Play a song in Spotify to add it to the graph.</i>
+                                        }
                                     </>
                                 }
-                                { !this.state.playing_id &&
-                                    <i>Play a song in Spotify to add it to the graph.</i>
+                                { !App.spotify.getAccessToken() &&
+                                    <i><AuthButtonSpotify on_aquire_token={this.on_spotify_login.bind(this)}/> to see playing songs.</i>
                                 }
                             </div>
                         </div>
@@ -113,9 +121,6 @@ class App extends React.Component<AppProps, AppState> {
                         cb_play_node={this.on_play_node.bind(this)}
                     />
 	            </div>
-                <div id="icons-container" style={{position: "absolute", right: "12px", top: "12px", display: "flex", flexDirection: "column", gap: "12px"}}>
-                    <AuthButtonSpotify on_aquire_token={this.on_spotify_login.bind(this)}/>
-                </div>
                 <div className="account-icon" onClick={() => {this.load_graph();}} style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
                     <img src={Bomb} style={{padding: "7px"}}/>
                 </div>
@@ -214,7 +219,8 @@ class App extends React.Component<AppProps, AppState> {
                         new_links = old_data.links.concat([{
                             source: this.state.selected_id!,
                             target: this.state.playing_id!,
-                            index: num_links + 1
+                            index: num_links + 1,
+                            ctime: (new Date()).getTime(),
                         }]);
                     }
                     else {
@@ -344,14 +350,16 @@ class App extends React.Component<AppProps, AppState> {
             e.preventDefault(); // If you prevent default behavior in Mozilla Firefox prompt will always be shown
             e.returnValue = ''; // Chrome requires returnValue to be set
 
-            this.save_graph();
+            if (App.spotify.getAccessToken()) {     // Only save the grah if we actually managed to log in
+                this.save_graph();
+            }
         });
     }
 
     save_graph(): void {
         var output: WOSGraphData = {
             nodes: this.state.data.nodes,
-            links: App.keep_properties(this.state.data.links as any, ['source', 'target', 'index']) as [WOSGraphLink],
+            links: App.keep_properties(this.state.data.links as any, ['source', 'target', 'index', 'ctime']) as [WOSGraphLink],
         }
 
         window.eel.py_write_graph_file(JSON.stringify(output))();
