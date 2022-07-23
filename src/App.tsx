@@ -331,10 +331,10 @@ class App extends React.Component<AppProps, AppState> {
     static link_colour(frac: number): string {
         // `frac` is the [0-1] placement of the link out of the total number of links
 
-        var MIN = 0.15;
-        frac = 1/((1-1/MIN)*(1-frac) + (1/MIN));
+        var MAX = 0.85;
+        frac = Math.sqrt(frac) * MAX;
 
-        return `hsl(0, 0%, ${(frac)*100}%)`;
+        return `hsl(0, 0%, ${frac*100}%)`;
     }
 
     static recompute_link_color(/*out*/ data: WOSGraphData, node_id: string) {
@@ -344,8 +344,8 @@ class App extends React.Component<AppProps, AppState> {
         links.forEach((link, i) => {
             // Apply a functiuon so that all but the first link seem *almost* equally weak.
 
-            var link_frac_here  = i / links.length;
-            var link_frac_there = get_link_index_on(link, get_neigbour_id(link, node_id)!) / get_node_links(data, get_neigbour_id(link, node_id)!).length;
+            var link_frac_here  = i / (links.length);
+            var link_frac_there = get_link_index_on(link, get_neigbour_id(link, node_id)!) / (get_node_links(data, get_neigbour_id(link, node_id)!).length);
             
             // Although actually the colour needs to represent the link's priority on *both* the songs it connects, so we average between the two fractions.
             link.color = App.link_colour((link_frac_here + link_frac_there) / 2);

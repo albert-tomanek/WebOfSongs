@@ -46,7 +46,7 @@ export class WOSGraph extends React.Component<WOSGraphProps, {config: any}> {
         this.state = {config: {
             width: 200,
             height: 200,
-            directed: true,
+            directed: false,
             staticGraphWithDragAndDrop: true,    // https://github.com/danielcaldas/react-d3-graph/blob/b566a95a205ef65cdef8a6df274d712ef91c3ab3/src/components/graph/Graph.jsx#L516
             nodeHighlightBehavior: true,
             node: {

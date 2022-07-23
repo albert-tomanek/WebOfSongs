@@ -127,11 +127,9 @@ export function set_link_index_on(data: WOSGraphData, id_a: string, id_b: string
 	if (link.target == id_b)
 	{
 		link.index_dst = index_b;
-		console.log("dst", index_b);
 	}
 	else if (link.source == id_b)
 	{
 		link.index_src = index_b;
-		console.log("src", index_b);
 	}
 }
