@@ -101,7 +101,8 @@ body {
 }
 
 .song-node.selected {
-    border-color: #79DBF9;
+    border-color: #287AF5;
+    background: #DBE9FF;
 }
 
 .song-node .title {
@@ -114,6 +115,10 @@ body {
     color: black;
 }
 
+.song-node.selected .title {
+    color: #287AF5;
+}
+
 .song-node .band {
     font-family: Roboto;
     font-style: normal;
@@ -122,6 +127,10 @@ body {
     line-height: 16px;
 
     color: #8E8E8E;
+}
+
+.song-node.selected .band {
+    color: #287AF5;
 }
 
 .title, .band {

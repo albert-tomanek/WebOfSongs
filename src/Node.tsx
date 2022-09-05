@@ -52,8 +52,18 @@ export class WOSNode extends React.Component<WOSNodeProps, WOSNodeState> {
 
 	render() {
 		var p = this.props;
+		var noborder = p.shadow ? {border: "none"} : {};
 	    return (
-	        <div className={p.is_focused ? "song-node selected" : "song-node"} style={{display: "flex", flexDirection: "row", filter: `drop-shadow(1px 4px 8px rgba(0, 0, 0, ${(p.shadow??0)*0.30}))`}} {...p.dragHandleProps}>
+	        <div
+				className={p.is_focused ? "song-node selected" : "song-node"}
+				style={{
+					display: "flex",
+					flexDirection: "row",
+					filter: `drop-shadow(1px 4px 8px rgba(0, 0, 0, ${(p.shadow??0)*0.30}))`,
+					...noborder
+				}}
+				{...p.dragHandleProps}
+			>
 	            <div className="song-node-img" style={{flexShrink: 0, width: "65px", height: "65px", backgroundImage: `url(${this.state.cover_url ?? ""})`, backgroundSize: 'cover'}}>
 					<svg width="65" height="65" xmlns="http://www.w3.org/2000/svg"
 						onClick={() => { if (p.cb_play_node) {p.cb_play_node(p.node.id)}}}
