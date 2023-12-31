@@ -1,3 +1,6 @@
+// Run with: /opt/node-v14.15.2-linux-x64/bin/node /opt/node-v14.15.2-linux-x64/lib/node_modules/npm/bin/npm-cli.js start
+// ⚠
+
 import React from 'react';
 import DraggableList from 'react-draggable-list';
 
@@ -28,7 +31,7 @@ import Bomb from './bomb.svg';
 
 // Uhh we need this to talk with python
 export const eel = window.eel
-eel.set_host('ws://localhost:8080')
+eel.set_host('ws://localhost:8080') // If you get a `TypeError: Eel is undefined`, you haven't started the helper script in `src_python/`.
 
 /* App */
 
@@ -85,7 +88,7 @@ class App extends React.Component<AppProps, AppState> {
                             }
 
                             <div id="now-playing" style={{padding: "16px"}}>
-                                { App.spotify.getAccessToken() && 
+                                { App.spotify.getAccessToken() &&
                                     <>
                                         { this.state.playing_id &&
                                             <>
@@ -346,7 +349,7 @@ class App extends React.Component<AppProps, AppState> {
 
             var link_frac_here  = i / (links.length);
             var link_frac_there = get_link_index_on(link, get_neigbour_id(link, node_id)!) / (get_node_links(data, get_neigbour_id(link, node_id)!).length);
-            
+
             // Although actually the colour needs to represent the link's priority on *both* the songs it connects, so we average between the two fractions.
             link.color = App.link_colour((link_frac_here + link_frac_there) / 2);
         });
