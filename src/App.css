@@ -64,6 +64,13 @@ body {
     color: black;
 }
 
+.label {
+    font-size: 16pt;
+    font-family: Roboto;
+    font-weight: normal;
+    color: black;
+}
+
 .ordering-elt > div {
     font-size: 16pt;
     font-family: Roboto;
@@ -104,7 +111,7 @@ body {
     background: #DBE9FF;
 }
 .song-node.sentimental {
-    border-color: rgba(178, 54, 26, 1);
+    border-color: #B8B8B8;
 }
 
 .song-node .title {
@@ -120,7 +127,7 @@ body {
     color: #287AF5;
 }
 .song-node.sentimental .title {
-    color: rgba(178, 54, 26, 1);
+    color: #B8B8B8;
     font-style: italic;
 }
 
@@ -137,7 +144,7 @@ body {
     color: #287AF5;
 }
 .song-node.sentimental .band {
-    color: rgba(178, 54, 26, 0.54);
+    color: #B8B8B8;
     font-style: italic;
 }
 

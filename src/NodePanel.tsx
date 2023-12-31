@@ -1,3 +1,5 @@
+// https://css-tricks.com/snippets/css/a-guide-to-flexbox/
+
 import React from 'react';
 import { GraphData as D3GraphData } from "react-d3-graph";
 import DraggableList from "react-draggable-list";
@@ -13,7 +15,7 @@ interface NodePanelProps {
     data: WOSGraphData;
     selected_id: string | null;
     playing_id: string | null;
-    cb_change_sentimental: (sensitive: boolean) => void;
+    cb_change_sentimental: (sentimental: boolean) => void;
     cb_reorder: (ids: string[]) => void;
     cb_delete_link: (id_from: string, id_to: string) => void;
     cb_play_node?: (id: string) => void;
@@ -22,7 +24,7 @@ interface NodePanelProps {
 interface NodePanelState {
     title: string|null;
     list: readonly WOSGraphNode[];  // bruh? Dunno why it has to be readonly
-    sensitive: boolean;
+    sentimental: boolean;
 }
 
 export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
@@ -32,7 +34,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 		this.state = {
             title: null,
             list: [],
-            sensitive: false,
+            sentimental: false,
 		};
 	}
 
@@ -42,7 +44,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
                 list: get_node_links(this.props.data, this.props.selected_id)   // May be both outgoing and incoming links -- WOS doesn't distinguish between the two so the utilized functions account for both cases
                     .sort((link_a, link_b) => get_link_index_on(link_a, this.props.selected_id!) - get_link_index_on(link_b, this.props.selected_id!))
                     .map(link => get_node(this.props.data, get_neigbour_id(link, this.props.selected_id!)!)!),
-                sensitive: get_node(this.props.data, this.props.selected_id!)!.sentimental ?? false,
+                sentimental: get_node(this.props.data, this.props.selected_id!)!.sentimental ?? false,
             });
 
             App.spotify.getTrack(this.props.selected_id.split(':')[2]).then((json) => {
@@ -94,14 +96,14 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
                         placeholder="Note…"
                         onBlur={(e) => { get_node(this.props.data, this.props.selected_id!)!.note = e.target.value; }}
                     />
-                    <label>
-                        Sensitive
+                    <label style={{display: "flex", flexDirection: "row", alignItems: "stretch", paddingTop: "12px"}}>
+                        <div className="label" style={{display: "inline", flexGrow: 1}}>Sentimental</div>
                         <input
                             type="checkbox"
-                            checked={ this.state.sensitive }
+                            checked={ this.state.sentimental }
                             onChange={() => {
-                                this.setState((old) => { return { sensitive: !old.sensitive }; }, () => {
-                                    this.props.cb_change_sentimental(this.state.sensitive);
+                                this.setState((old) => { return { sentimental: !old.sentimental }; }, () => {
+                                    this.props.cb_change_sentimental(this.state.sentimental);
                                 });
                             }}
                         />
