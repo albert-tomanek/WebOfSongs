@@ -13,6 +13,7 @@ interface NodePanelProps {
     data: WOSGraphData;
     selected_id: string | null;
     playing_id: string | null;
+    cb_change_sentimental: (sensitive: boolean) => void;
     cb_reorder: (ids: string[]) => void;
     cb_delete_link: (id_from: string, id_to: string) => void;
     cb_play_node?: (id: string) => void;
@@ -21,6 +22,7 @@ interface NodePanelProps {
 interface NodePanelState {
     title: string|null;
     list: readonly WOSGraphNode[];  // bruh? Dunno why it has to be readonly
+    sensitive: boolean;
 }
 
 export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
@@ -30,6 +32,7 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
 		this.state = {
             title: null,
             list: [],
+            sensitive: false,
 		};
 	}
 
@@ -38,7 +41,8 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
             this.setState({
                 list: get_node_links(this.props.data, this.props.selected_id)   // May be both outgoing and incoming links -- WOS doesn't distinguish between the two so the utilized functions account for both cases
                     .sort((link_a, link_b) => get_link_index_on(link_a, this.props.selected_id!) - get_link_index_on(link_b, this.props.selected_id!))
-                    .map(link => get_node(this.props.data, get_neigbour_id(link, this.props.selected_id!)!)!)
+                    .map(link => get_node(this.props.data, get_neigbour_id(link, this.props.selected_id!)!)!),
+                sensitive: get_node(this.props.data, this.props.selected_id!)!.sentimental ?? false,
             });
 
             App.spotify.getTrack(this.props.selected_id.split(':')[2]).then((json) => {
@@ -57,8 +61,8 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
     }
 
     on_list_update(new_list: ReadonlyArray<WOSGraphNode>, item: WOSGraphNode, old_idx: number, new_idx: number) {
-        this.setState({list: new_list});
-        this.props.cb_reorder(new_list.map(node => node.id));
+        this.setState({list: new_list});    // 1: This is to update this's state
+        this.props.cb_reorder(new_list.map(node => node.id));   // 2: This is to update the state of the node in the graph, which only our parent has access to.
     }
 
 	render() {
@@ -90,6 +94,18 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
                         placeholder="Note…"
                         onBlur={(e) => { get_node(this.props.data, this.props.selected_id!)!.note = e.target.value; }}
                     />
+                    <label>
+                        Sensitive
+                        <input
+                            type="checkbox"
+                            checked={ this.state.sensitive }
+                            onChange={() => {
+                                this.setState((old) => { return { sensitive: !old.sensitive }; }, () => {
+                                    this.props.cb_change_sentimental(this.state.sensitive);
+                                });
+                            }}
+                        />
+                    </label>
     			</div>
     		);
         }

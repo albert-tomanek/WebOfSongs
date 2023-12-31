@@ -53,9 +53,15 @@ export class WOSNode extends React.Component<WOSNodeProps, WOSNodeState> {
 	render() {
 		var p = this.props;
 		var noborder = p.shadow ? {border: "none"} : {};
+		var classNames = ["song-node"];
+		if (p.node.sentimental ?? false)
+			classNames.push("sentimental");
+		if (p.is_focused)
+			classNames.push("selected");
+
 	    return (
 	        <div
-				className={p.is_focused ? "song-node selected" : "song-node"}
+				className={classNames.join(" ")}
 				style={{
 					display: "flex",
 					flexDirection: "row",

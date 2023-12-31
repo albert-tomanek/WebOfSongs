@@ -14,7 +14,7 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
 	// Account logic taken from: https://github.com/spotify/web-api-auth-examples/blob/master/implicit_grant/public/index.html
 
     static CLIENT_ID = '1d3d80974a3c4a3a99b6f25c4e7483aa'; // Your client id
-    static REDIRECT_URI = 'http://localhost:3000/'; // Your redirect uri
+    static REDIRECT_URI = window.location.href; // Your redirect uri
 
 	constructor(props: AuthButtonSpotifyProps) {
 		super(props);

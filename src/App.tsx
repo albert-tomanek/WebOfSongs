@@ -79,6 +79,11 @@ class App extends React.Component<AppProps, AppState> {
                                     selected_id={this.state.selected_id}
                                     playing_id={this.state.playing_id}
 
+                                    cb_change_sentimental={(sen) => { this.setState((old_state) => {
+                                        var data = old_state.data;
+                                        get_node(data, this.state.selected_id!)!.sentimental = sen;
+                                        return { data: data };
+                                    }); }}
                                     cb_reorder={this.on_links_reorder.bind(this)}
                                     cb_delete_link={this.on_delete_link.bind(this)}
                                     cb_play_node={this.on_play_node.bind(this)}
