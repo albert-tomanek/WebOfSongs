@@ -28,10 +28,8 @@ import { WOSNode, get_node, get_node_links, get_link, get_link_index_on, set_lin
 
 import Plus from './plus.svg';
 import Bomb from './bomb.svg';
-
-// Uhh we need this to talk with python
-export const eel = window.eel
-eel.set_host('ws://localhost:8080') // If you get a `TypeError: Eel is undefined`, you haven't started the helper script in `src_python/`.
+import LoadIcon from './load.svg';
+import SaveIcon from './save.svg';
 
 /* App */
 
@@ -129,8 +127,22 @@ class App extends React.Component<AppProps, AppState> {
                         cb_play_node={this.on_play_node.bind(this)}
                     />
 	            </div>
-                <div className="account-icon" onClick={() => {this.load_graph();}} style={{position: "absolute", right: "12px", bottom: "12px", width: "48px", height: "48px", backgroundSize: "contain", backgroundColor: "white"}}>
-                    <img src={Bomb} style={{padding: "7px"}}/>
+                <input
+                    type="file"
+                    id="fileInput"
+                    accept=".json"
+                    style={{ display: 'none' }}
+                    onChange={() => this.on_load_file_submit()}
+                />
+                <div style={{position: "absolute", right: "12px", bottom: "12px", display: "flex", flexDirection: "column", gap: "8.5px"}}>
+                    <div className="button" onClick={() => document.getElementById('fileInput')?.click()} style={{display: "flex", flexDirection: "row"}}>
+                        <img src={LoadIcon} style={{width: "20px", height: "20px"}}/>
+                        <b>Load</b>
+                    </div>
+                    <a className="button" onClick={() => {this.on_save_button_click()}} style={{display: "flex", flexDirection: "row"}}>
+                        <img src={SaveIcon} style={{width: "20px", height: "20px"}}/>
+                        <b>Save</b>
+                    </a>
                 </div>
 			</div>
 		);
@@ -144,8 +156,6 @@ class App extends React.Component<AppProps, AppState> {
 
         this.sync_currently_playing();
         setInterval(() => this.sync_currently_playing(), 5000);
-
-        this.load_graph();
     }
 
     sync_currently_playing() {
@@ -373,13 +383,30 @@ class App extends React.Component<AppProps, AppState> {
         });
     }
 
-    save_graph(): void {
+    save_graph(): string {
         var output: WOSGraphData = {
             nodes: this.state.data.nodes,
             links: App.keep_properties(this.state.data.links as any, ['source', 'index_src', 'target', 'index_dst', 'ctime']) as [WOSGraphLink],
         }
 
-        window.eel.py_write_graph_file(JSON.stringify(output))();
+        return JSON.stringify(output);
+    }
+
+    on_save_button_click(): void {
+        // https://stackoverflow.com/a/48968694/6130358
+
+        let blob = new Blob([this.save_graph()]);
+
+        const a = document.createElement('a');
+        document.body.appendChild(a);
+        const url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = "web_" + (new Date).toISOString().substring(0, 19).replaceAll('-','').replaceAll(':','').replaceAll('T','_') + '.json';
+        a.click();
+        setTimeout(() => {
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        }, 0);
     }
 
     static keep_properties(list: any[], propnames: string[]): any[] {
@@ -394,38 +421,48 @@ class App extends React.Component<AppProps, AppState> {
         });
     }
 
-    load_graph(): void {
+    on_load_file_submit(): void {
+        // @ts-ignore: Object is possibly 'null'.
+        let file = (document.getElementById('fileInput') as HTMLInputElement).files[0];
+        let reader = new FileReader();
+        reader.onload = (evt) => {
+            // @ts-ignore: Object is possibly 'null'.
+            this.load_graph(evt.target.result);
+        };
+        reader.readAsText(file);
+    }
+
+    load_graph(data: string): void {
         console.log('Loading graph');
-        window.eel.py_read_graph_file()().then((text: string) => {
-            try {
-                var json: any = JSON.parse(text);
-                if (json.nodes != undefined && json.links != undefined)
-                {
-                    /* Merge the loaded data into whatever is already there (probably nothing) */
-                    this.setState(state => {
-                        return {
-                            data: {
-                                nodes: state.data.nodes.concat(json.nodes),
-                                links: state.data.links.concat(json.links),
-                            }
+
+        try {
+            var json: any = JSON.parse(data);
+            if (json.nodes != undefined && json.links != undefined)
+            {
+                /* Merge the loaded data into whatever is already there (probably nothing) */
+                this.setState(state => {
+                    return {
+                        data: {
+                            nodes: state.data.nodes.concat(json.nodes),
+                            links: state.data.links.concat(json.links),
                         }
+                    }
+                });
+
+                /* Compute the link colours for each link */
+                this.setState(state => {
+                    var data = state.data;
+                    data.nodes.forEach(node => {
+                        App.recompute_link_color(data, node.id);
                     });
 
-                    /* Compute the link colours for each link */
-                    this.setState(state => {
-                        var data = state.data;
-                        data.nodes.forEach(node => {
-                            App.recompute_link_color(data, node.id);
-                        });
-
-                        return { data: data };
-                    });
-                }
+                    return { data: data };
+                });
             }
-            catch (e) {
-                alert("Error loading graph from JSON: " + (e as Error).message);
-            }
-        });
+        }
+        catch (e) {
+            alert("Error loading graph from JSON: " + (e as Error).message);
+        }
     }
 }
 
