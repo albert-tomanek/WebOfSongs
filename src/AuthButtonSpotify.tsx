@@ -13,8 +13,9 @@ interface AuthButtonSpotifyState {
 export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, AuthButtonSpotifyState> {
 	// Account logic taken from: https://github.com/spotify/web-api-auth-examples/blob/master/implicit_grant/public/index.html
 
-    static CLIENT_ID = '1d3d80974a3c4a3a99b6f25c4e7483aa'; // Your client id
-    static REDIRECT_URI = window.location.href; // Your redirect uri
+    static CLIENT_ID = '1d3d80974a3c4a3a99b6f25c4e7483aa';  // https://developer.spotify.com/dashboard
+    static REDIRECT_URI = window.location.href;
+    // static REDIRECT_URI = "https://www.example.com/";    // Goes to https://www.example.com/#access_token=BQBylsLWQor2qM2w7soSGZbkY0W8oLvB3XfDCImJfilRE6AZGO35uMgzPB_mkpWpW9WRePa3Yl7LxqXyC2CBV6OVhX8Sck9nS_baqCY2hqWARWNY61EPoNNyDDshP0pakRwV6C9HuE3apBmfiW8l7LANECU-K6JmQIpvDxQu-qe_bzRxDBg8uaCIEGesMzbWkNmhif8QTuvGqNfob81VcOE&token_type=Bearer&expires_in=3600&state=mA8xxlEpXxENtT3P
 
 	constructor(props: AuthButtonSpotifyProps) {
 		super(props);
@@ -121,7 +122,8 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
 		url += '&redirect_uri=' + encodeURIComponent(AuthButtonSpotify.REDIRECT_URI);
 		url += '&state=' + encodeURIComponent(state);
 
-		window.location.assign(url);
+        // window.open(url, '_blank')!.focus();
+        window.location.assign(url);
 	}
 
     signout(): void {

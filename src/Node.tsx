@@ -88,13 +88,25 @@ export class WOSNode extends React.Component<WOSNodeProps, WOSNodeState> {
 						</> :
 						<>
 							<div className="title">{"Title"}</div>
-							<div className="band">{this.props.node.id}</div>
+							<div className="band">{try_get_link_for_node_id(this.props.node.id) ?
+								<><a href={try_get_link_for_node_id(this.props.node.id)!}>{this.props.node.id}</a></> :
+								this.props.node.id
+							}</div>
 						</>
 					}
 	            </div>
 	        </div>
 	    );
 	}
+}
+
+function try_get_link_for_node_id(id: string): string|null {	// Sometimes we use the platform-native ID for our D3GraphNode IDs. This function extracts it from the ID if present and uses it to make a link to the source site.
+	if (id.startsWith("spotify:track:")) {	// Songs from Spotify
+		let spot_id = id.slice("spotify:track:".length);
+		return `https://open.spotify.com/track/${spot_id}`;
+	}
+
+	return null;
 }
 
 // Get a the node with the given ID
