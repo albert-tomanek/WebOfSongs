@@ -1,0 +1,3 @@
+[submodule "Neu-AppImage"]
+	path = Neu-AppImage
+	url = https://github.com/frokk/Neu-AppImage
