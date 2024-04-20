@@ -7,10 +7,6 @@ import DraggableList from 'react-draggable-list';
 // https://cnpmjs.org/package/@types/spotify-web-playback-sdk
 import SpotifyWebApi from 'spotify-web-api-js';
 
-// TODO: Replace with https://github.com/adrianbota/gdrive-appdata
-// @ts-ignore
-import { gapi } from "gapi-script";
-
 import {event as currentEvent} from 'd3-selection';
 import './App.css';
 

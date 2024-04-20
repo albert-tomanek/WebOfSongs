@@ -2,8 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/neutralinojs/neutralinojs/main/schemas/neutralino.config.schema.json",
   "applicationId": "com.github.albert-tomanek.webofsongs",
   "version": "1.0.0",
-  "defaultMode": "window",
-  "port": 10353,
+  "defaultMode": "browser",
+  "port": 0,
   "documentRoot": "/app/",
   "url": "/",
   "enableServer": true,
@@ -32,15 +32,15 @@
   },
   "modes": {
     "window": {
-      "title": "distrib",
+      "title": "Web of Songs",
       "width": 800,
       "height": 500,
-      "minWidth": 400,
-      "minHeight": 200,
+      "minWidth": 600,
+      "minHeight": 500,
       "center": true,
       "fullScreen": false,
       "alwaysOnTop": false,
-      "icon": "/resources/icons/appIcon.png",
+      "icon": "/app/logo192.png",
       "enableInspector": false,
       "borderless": false,
       "maximize": true,
@@ -85,7 +85,7 @@
     "win": {
       "architecture": ["x64"],
       "appName": "WebOfSongs",
-      "appIcon": "app/favicon.ico"
+      "appIcon": "/app/favicon.ico"
     }
   }
 }

@@ -1,55 +1,8 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
-<svg
-   width="48"
-   height="48"
-   viewBox="0 0 12.7 12.7"
-   version="1.1"
-   id="svg5"
-   sodipodi:docname="plus.svg"
-   inkscape:version="1.1 (c68e22c387, 2021-05-23)"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <sodipodi:namedview
-     id="namedview7"
-     pagecolor="#ffffff"
-     bordercolor="#666666"
-     borderopacity="1.0"
-     inkscape:pageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     showgrid="false"
-     inkscape:zoom="5.12"
-     inkscape:cx="14.0625"
-     inkscape:cy="29.785156"
-     inkscape:window-width="1680"
-     inkscape:window-height="979"
-     inkscape:window-x="121"
-     inkscape:window-y="34"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="layer1" />
-  <defs
-     id="defs2" />
-  <g
-     id="layer1"
-     style="fill:#404040;fill-opacity:1">
-    <path
-       style="fill:#404040;fill-opacity:1;stroke:#9a9a9a;stroke-width:1.05833333;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 6.3499999,1.0583333 V 11.641666"
-       id="path859" />
-    <path
-       style="fill:none;fill-opacity:1;stroke:#9a9a9a;stroke-width:1.05833333;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 1.0583333,6.3499999 H 11.641666"
-       id="path861" />
-    <rect
-       style="fill:none;fill-opacity:1;stroke:#404040;stroke-width:0.793751;stroke-linecap:round;stroke-opacity:1"
-       id="rect1216"
-       width="9.7591486"
-       height="8.7534752"
-       x="-18.162872"
-       y="-7.6855612" />
-  </g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="48" height="48" version="1.1" viewBox="0 0 12.7 12.7" xmlns="http://www.w3.org/2000/svg">
+<g>
+<path d="m6.35 1.0583v10.583" fill="#404040" stroke="#9a9a9a" stroke-width="1.0583"/>
+<path d="m1.0583 6.35h10.583" fill="none" stroke="#9a9a9a" stroke-width="1.0583"/>
+<rect x="-18.163" y="-7.6856" width="9.7591" height="8.7535" fill="none" stroke="#404040" stroke-linecap="round" stroke-width=".79375"/>
+</g>
 </svg>
