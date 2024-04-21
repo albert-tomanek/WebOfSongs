@@ -1,3 +1,9 @@
+/* Font */
+@font-face {
+    font-family: "Roboto";
+    src: url("../public/Roboto-Regular.ttf") format("truetype");
+}
+
 /* Get it to fill the height */
 
 body {

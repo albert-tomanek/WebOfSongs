@@ -3,7 +3,7 @@
   "applicationId": "com.github.albert-tomanek.webofsongs",
   "version": "1.0.0",
   "defaultMode": "browser",
-  "port": 0,
+  "port": 10353,
   "documentRoot": "/app/",
   "url": "/",
   "enableServer": true,

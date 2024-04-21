@@ -1,5 +1,5 @@
 // Run with: /opt/node-v14.15.2-linux-x64/bin/node /opt/node-v14.15.2-linux-x64/lib/node_modules/npm/bin/npm-cli.js start
-// ⚠
+// Add users under Settings->User Management [https://developer.spotify.com/dashboard/1d3d80974a3c4a3a99b6f25c4e7483aa/users]
 
 import React from 'react';
 import DraggableList from 'react-draggable-list';
