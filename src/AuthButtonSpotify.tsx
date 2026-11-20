@@ -11,11 +11,14 @@ interface AuthButtonSpotifyState {
 }
 
 export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, AuthButtonSpotifyState> {
-	// Account logic taken from: https://github.com/spotify/web-api-auth-examples/blob/master/implicit_grant/public/index.html
+	// Uses the Authorization Code flow with PKCE: https://developer.spotify.com/documentation/web-api/tutorials/code-pkce-flow
+	// The redirect URI must be registered in the dashboard, and must be https:// or http://127.0.0.1 (not localhost).
 
     static CLIENT_ID = '1d3d80974a3c4a3a99b6f25c4e7483aa';  // https://developer.spotify.com/dashboard
-    static REDIRECT_URI = window.location.href;
-    // static REDIRECT_URI = "https://www.example.com/";    // Goes to https://www.example.com/#access_token=BQBylsLWQor2qM2w7soSGZbkY0W8oLvB3XfDCImJfilRE6AZGO35uMgzPB_mkpWpW9WRePa3Yl7LxqXyC2CBV6OVhX8Sck9nS_baqCY2hqWARWNY61EPoNNyDDshP0pakRwV6C9HuE3apBmfiW8l7LANECU-K6JmQIpvDxQu-qe_bzRxDBg8uaCIEGesMzbWkNmhif8QTuvGqNfob81VcOE&token_type=Bearer&expires_in=3600&state=mA8xxlEpXxENtT3P
+    static REDIRECT_URI = window.location.origin + window.location.pathname;    // Without the query string, so that it's the same before and after the redirect
+    static SCOPE = 'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing';
+
+    refresh_timer: number|undefined;
 
 	constructor(props: AuthButtonSpotifyProps) {
 		super(props);
@@ -28,33 +31,83 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
 	}
 
 	componentDidMount() {
-        var url_params = getHashParams(); // Get params from the URL if we've returned from Spotify's OAuth
+        var url_params = new URLSearchParams(window.location.search);   // Spotify's OAuth returns ?code=...&state=... (or ?error=...)
         var token_expiry = parseInt(localStorage.getItem('spotify_token_expiry') ?? '0');     // Expiry time of the cached token
 
-		if (url_params.access_token) {
+		if (url_params.has('code') || url_params.has('error')) {
             /* If we've returned from OAuth */
-            // window.history.pushState(null, '', window.location.href);    // Change the url to get rid of the hash params.
-            window.location.assign(window.location.href);   // FIXME: above doesn't work
+            window.history.replaceState(null, '', AuthButtonSpotify.REDIRECT_URI + window.location.hash);    // Get rid of the query params
 
             var storedState: string|null = localStorage.getItem('spotify_auth_state');
+            var code_verifier: string|null = localStorage.getItem('spotify_code_verifier');
+            localStorage.removeItem('spotify_auth_state');
+            localStorage.removeItem('spotify_code_verifier');
 
-            if ((url_params.state == null || url_params.state !== storedState)) {
+            if (url_params.has('error') || url_params.get('state') !== storedState || code_verifier == null) {
     			alert('There was an error during Spotify authentication');
     		} else {
-    			localStorage.removeItem('spotify_auth_state');
-
-                localStorage.setItem('spotify_auth_token', url_params.access_token);
-                localStorage.setItem('spotify_token_expiry', (Date.now() + 1000*parseInt(url_params.expires_in)).toString());
-                this.token_aquired(url_params.access_token);
+                this.request_token({
+                    grant_type: 'authorization_code',
+                    code: url_params.get('code')!,
+                    redirect_uri: AuthButtonSpotify.REDIRECT_URI,
+                    code_verifier: code_verifier,
+                });
     		}
         }
         else if (Date.now() < token_expiry) {
             this.token_aquired(localStorage.getItem('spotify_auth_token')!);
+            this.schedule_refresh(token_expiry);
+        }
+        else if (localStorage.getItem('spotify_refresh_token')) {
+            this.refresh_token();
         }
         else {
             // Too bad. No token. We've got to wait for the user to log in.
         }
 	}
+
+    componentWillUnmount() {
+        window.clearTimeout(this.refresh_timer);
+    }
+
+    request_token(params: Record<string, string>) {
+        /* Exchanges an authorization code or refresh token for an access token */
+        fetch('https://accounts.spotify.com/api/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ client_id: AuthButtonSpotify.CLIENT_ID, ...params }),
+        }).then((response) => {
+            if (!response.ok) throw new Error('Token request failed: ' + response.status);
+            return response.json();
+        }).then((json: any) => {
+            var expiry = Date.now() + 1000*json.expires_in;
+
+            localStorage.setItem('spotify_auth_token', json.access_token);
+            localStorage.setItem('spotify_token_expiry', expiry.toString());
+            if (json.refresh_token) {   // Spotify may rotate the refresh token
+                localStorage.setItem('spotify_refresh_token', json.refresh_token);
+            }
+
+            this.token_aquired(json.access_token);
+            this.schedule_refresh(expiry);
+        }).catch((err) => {
+            console.error(err);
+            localStorage.removeItem('spotify_refresh_token');   // Probably revoked; the user will have to log in again.
+        });
+    }
+
+    refresh_token() {
+        this.request_token({
+            grant_type: 'refresh_token',
+            refresh_token: localStorage.getItem('spotify_refresh_token')!,
+        });
+    }
+
+    schedule_refresh(expiry: number) {
+        // Refresh a minute before the token runs out
+        window.clearTimeout(this.refresh_timer);
+        this.refresh_timer = window.setTimeout(() => this.refresh_token(), Math.max(0, expiry - Date.now() - 60*1000));
+    }
 
     token_aquired(token: string) {
         if (this.props.on_aquire_token) {
@@ -69,7 +122,7 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
             return response.json();
         }).then((json: any) => {
             this.setState({
-                profile_pic_url: (json.images.length > 0) ? json.images[0].url : null,
+                profile_pic_url: (json.images?.length > 0) ? json.images[0].url : null,
                 profile_name: json.display_name,
                 access_token: token,
             });
@@ -109,20 +162,29 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
         }
     }
 
-	goto_login_page(): void {
+	async goto_login_page() {
+		if (window.location.hostname === 'localhost') {
+			// Spotify rejects localhost as a redirect URI, but allows 127.0.0.1. Move there first, since localStorage is per-origin.
+			window.location.hostname = '127.0.0.1';
+			return;
+		}
+
 		var state = generateRandomString(16);
+		var code_verifier = generateRandomString(64);
 
 		localStorage.setItem('spotify_auth_state', state);
-		var scope = 'user-read-private user-read-playback-state user-modify-playback-state user-read-currently-playing';
+		localStorage.setItem('spotify_code_verifier', code_verifier);
 
-		var url = 'https://accounts.spotify.com/authorize';
-		url += '?response_type=token';
-		url += '&client_id=' + encodeURIComponent(AuthButtonSpotify.CLIENT_ID);
-		url += '&scope=' + encodeURIComponent(scope);
-		url += '&redirect_uri=' + encodeURIComponent(AuthButtonSpotify.REDIRECT_URI);
-		url += '&state=' + encodeURIComponent(state);
+		var url = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
+			response_type: 'code',
+			client_id: AuthButtonSpotify.CLIENT_ID,
+			scope: AuthButtonSpotify.SCOPE,
+			redirect_uri: AuthButtonSpotify.REDIRECT_URI,
+			state: state,
+			code_challenge_method: 'S256',
+			code_challenge: await sha256Base64Url(code_verifier),
+		});
 
-        // window.open(url, '_blank')!.focus();
         window.location.assign(url);
 	}
 
@@ -133,27 +195,23 @@ export class AuthButtonSpotify extends React.Component<AuthButtonSpotifyProps, A
             access_token: null,
         });
 
-        localStorage.setItem('spotify_token_expiry', '0');  // Just pretend the token has expired so that it doesn't get used.
+        window.clearTimeout(this.refresh_timer);
+        localStorage.removeItem('spotify_auth_token');
+        localStorage.removeItem('spotify_token_expiry');
+        localStorage.removeItem('spotify_refresh_token');
     }
 }
 
-function getHashParams() {
-	/* Obtains parameters from the hash of the URL */
-	var hashParams: any = {};
-	var e, r = /([^&;=]+)=?([^&;]*)/g,
-		q = window.location.hash.substring(1);
-	while (e = r.exec(q)) {
-		hashParams[e[1]] = decodeURIComponent(e[2]);
-	}
-	return hashParams;
+function generateRandomString(length: number) {
+	/* Cryptographically random, as required for the PKCE code verifier */
+	var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	var values = crypto.getRandomValues(new Uint8Array(length));
+	return Array.from(values, (x) => possible[x % possible.length]).join('');
 }
 
-function generateRandomString(length: number) {
-  var text = '';
-  var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-
-  for (var i = 0; i < length; i++) {
-	text += possible.charAt(Math.floor(Math.random() * possible.length));
-  }
-  return text;
+async function sha256Base64Url(text: string) {
+	/* Computes the PKCE code challenge. Note that crypto.subtle is only available on https:// or 127.0.0.1. */
+	var digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+	return btoa(String.fromCharCode(...Array.from(new Uint8Array(digest))))
+		.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }

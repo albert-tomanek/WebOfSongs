@@ -5,6 +5,7 @@ import { GraphData as D3GraphData } from "react-d3-graph";
 import DraggableList from "react-draggable-list";
 
 import App from './App';
+import { get_track } from './SpotifyTracks';
 import Textarea from 'react-expanding-textarea';
 import { WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 import { WOSNode, WOSNodeProps, get_node, get_node_links, get_link_index_on, set_link_index_on, get_neigbour_id } from './Node';
@@ -47,11 +48,11 @@ export class NodePanel extends React.Component<NodePanelProps, NodePanelState> {
                 sentimental: get_node(this.props.data, this.props.selected_id!)!.sentimental ?? false,
             });
 
-            App.spotify.getTrack(this.props.selected_id.split(':')[2]).then((json) => {
+            get_track(this.props.selected_id).then((track) => {
                 this.setState({
-                    title: json.name,
+                    title: track.name,
                 });
-            });
+            }).catch(console.error);
         }
     }
 

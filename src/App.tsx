@@ -18,6 +18,7 @@ import {
 } from "react-d3-graph";
 
 import { AuthButtonSpotify } from './AuthButtonSpotify';
+import { get_track, on_spotify_login } from './SpotifyTracks';
 import { WOSGraph, WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 import { NodePanel, OrderingElt } from './NodePanel';
 import { WOSNode, get_node, get_node_links, get_link, get_link_index_on, set_link_index_on, get_neigbour_id } from './Node';
@@ -37,6 +38,7 @@ interface AppState {
     selected_id: string | null;
     playing_id: string | null;
     data: WOSGraphData;
+    spotify_logged_in: boolean;    // Mirrors App.spotify.getAccessToken() so that logging in triggers a re-render
 }
 
 class App extends React.Component<AppProps, AppState> {
@@ -55,6 +57,7 @@ class App extends React.Component<AppProps, AppState> {
             selected_id: null,
             playing_id: null,
             data: { nodes: [], links: [] },
+            spotify_logged_in: false,
 		};
 	}
 
@@ -87,7 +90,7 @@ class App extends React.Component<AppProps, AppState> {
                             }
 
                             <div id="now-playing" style={{padding: "16px"}}>
-                                { App.spotify.getAccessToken() &&
+                                { this.state.spotify_logged_in &&
                                     <>
                                         { this.state.playing_id &&
                                             <>
@@ -109,7 +112,7 @@ class App extends React.Component<AppProps, AppState> {
                                         }
                                     </>
                                 }
-                                { !App.spotify.getAccessToken() &&
+                                { !this.state.spotify_logged_in &&
                                     <i><AuthButtonSpotify on_aquire_token={this.on_spotify_login.bind(this)}/> to see playing songs.</i>
                                 }
                             </div>
@@ -135,10 +138,12 @@ class App extends React.Component<AppProps, AppState> {
                         <img src={LoadIcon} style={{width: "20px", height: "20px"}}/>
                         <b>Load</b>
                     </div>
-                    <a className="button" onClick={() => {this.on_save_button_click()}} style={{display: "flex", flexDirection: "row"}}>
-                        <img src={SaveIcon} style={{width: "20px", height: "20px"}}/>
-                        <b>Save</b>
-                    </a>
+                    { (this.state.data.nodes.length == 0) ? null : (
+                        <a className="button" onClick={() => {this.on_save_button_click()}} style={{display: "flex", flexDirection: "row"}}>
+                            <img src={SaveIcon} style={{width: "20px", height: "20px"}}/>
+                            <b>Save</b>
+                        </a>
+                    )}
                 </div>
 			</div>
 		);
@@ -148,7 +153,12 @@ class App extends React.Component<AppProps, AppState> {
 
     on_spotify_login(access_token: string)
     {
+        var already_logged_in = App.spotify.getAccessToken() != null;
         App.spotify.setAccessToken(access_token);
+        if (already_logged_in) return;  // Just a refreshed token; the polling is already running.
+
+        this.setState({spotify_logged_in: true});
+        on_spotify_login();     // Lets the queued track requests go ahead
 
         this.sync_currently_playing();
         setInterval(() => this.sync_currently_playing(), 5000);
@@ -192,11 +202,11 @@ class App extends React.Component<AppProps, AppState> {
 
     on_play_node(id: string) {
 
-        App.spotify.getTrack(id.split(':')[2]).then((track_json) => {
+        get_track(id).then((track) => {
             App.spotify.play({
-                context_uri: track_json.album.uri,
+                context_uri: track.album_uri,
                 offset: {
-                    position: track_json.track_number - 1,  // There was an off-by-one error for some reason. Weird since we're getting the infex from anfd feeding it back to the same API.
+                    position: track.track_number - 1,  // There was an off-by-one error for some reason. Weird since we're getting the infex from anfd feeding it back to the same API.
                 }
             }).then(() => {
                 console.log('submitted play')

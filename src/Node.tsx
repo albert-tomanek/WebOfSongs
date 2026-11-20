@@ -2,6 +2,7 @@ import React from 'react';
 import { GraphData as D3GraphData } from "react-d3-graph";
 
 import App from './App';
+import { get_track } from './SpotifyTracks';
 import { WOSGraphData, WOSGraphNode, WOSGraphLink } from './WOSGraph';
 
 export interface WOSNodeProps {
@@ -38,16 +39,14 @@ export class WOSNode extends React.Component<WOSNodeProps, WOSNodeState> {
 	}
 
 	componentDidMount() {
-		if (App.spotify.getAccessToken())
-		{
-			App.spotify.getTrack(this.props.node.id.split(':')[2]).then((json) => {
-				this.setState({
-					title: json.name,
-					band: json.artists.map(a => a.name).join(', '),
-					cover_url: json.album.images.sort((a, b) => a.width! - b!.width!)[0].url,
-				});
+		// Resolves once we're logged in to Spotify, which may be a while after this node was first shown
+		get_track(this.props.node.id).then((track) => {
+			this.setState({
+				title: track.name,
+				band: track.artists.join(', '),
+				cover_url: track.cover_url,
 			});
-		}
+		}).catch(console.error);
 	}
 
 	render() {
@@ -81,7 +80,7 @@ export class WOSNode extends React.Component<WOSNodeProps, WOSNodeState> {
 	            <div style={{display: "flex", flexDirection: "column", justifyContent: "space-around", padding: "8.5px 8.5px 8.5px 10px"}}
 					onClick={() => { if (p.cb_focus_node) {p.cb_focus_node(p.node.id)}}}
 				>
-					{ App.spotify.getAccessToken() ?
+					{ (this.state.title != null || App.spotify.getAccessToken()) ?	// Cached track info can show up before we've logged in
 						<>
 			                <div className="title">{this.state.title ?? "░░░░░░░"}</div>
 			                <div className="band">{this.state.band ?? "░░░░░░░"}</div>

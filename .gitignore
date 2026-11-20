@@ -23,6 +23,6 @@ yarn-debug.log*
 yarn-error.log*
 
 # Neutralino stuff
-neutralino-build-scripts
+#neutralino-build-scripts
 WebOfSongs-x86_64.AppImage
 distrib/app/
